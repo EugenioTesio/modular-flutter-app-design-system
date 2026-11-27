@@ -2,7 +2,7 @@ name: design_system
 description: >-
   Interim design system for the modular Flutter app: tokens, light and dark
   themes, and accessible components. Delivered through Foundations.
-version: 0.1.0
+version: 0.1.1
 publish_to: none
 
 environment:
