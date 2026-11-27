@@ -4,19 +4,17 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../helpers/a11y_harness.dart';
+import '../support/ds_a11y_harness.dart';
+import '../support/ds_component_cases.dart';
 
 void main() {
   group('Given a DsLoadingIndicator', () {
-    DsA11yHarness.describeRules({
-      'spinning': () =>
-          const DsLoadingIndicator(semanticsLabel: 'Loading accounts'),
-    });
+    DsA11yHarness.describeRules(DsComponentCases.loadingIndicator.states);
 
     testWidgets('When it is built, Then it announces its label, has the '
         'given size, and uses actionPrimary', (tester) async {
       // Given
-      final colors = DsTheme.dark().extension<DsColors>()!;
+      final colors = DsTheme.dark().extension<DsTokens>()!.colors;
 
       // When
       await DsA11yHarness.pump(

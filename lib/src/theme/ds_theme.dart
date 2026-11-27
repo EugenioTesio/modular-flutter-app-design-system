@@ -3,233 +3,80 @@ library;
 
 import 'package:flutter/material.dart';
 
-import '../tokens/ds_colors.dart';
-import '../tokens/ds_palette.dart';
-import '../tokens/ds_radius.dart';
-import '../tokens/ds_typography.dart';
-import 'ds_brand.dart';
-import 'ds_contrast.dart';
+import '../brand/ds_brand.dart';
+import '../tokens/ds_tokens.dart';
 
-/// Factory for the application's light and dark [ThemeData], derived from
-/// one [DsBrand].
+/// Factory for the [ThemeData] of a brand in light or dark mode: how the App
+/// Shell places the top-level brand.
 ///
-/// Use this once, in the host's `MaterialApp`: `theme: DsTheme.light()` and
-/// `darkTheme: DsTheme.dark()`, with the same brand for both.
+/// Use this once, in the App Shell's `MaterialApp`: `theme:
+/// DsTheme.light(brand: brand)` and `darkTheme: DsTheme.dark(brand:
+/// brand)`, with the same brand for both.
 ///
-/// This is **not** something micro apps call: they read the resulting
-/// tokens through `context.dsColors` and `context.dsTypography`.
+/// This is **not** something components call: they read the nearest brand
+/// through `context.dsColors` and the other getters of [DsThemeContext].
 ///
-/// Built-in: each theme installs [DsColors] and [DsTypography] as
-/// [ThemeExtension]s, and aligns the Material color scheme, text theme, and
-/// component themes (app bar, input fields, list tiles, cards, dividers, and
-/// progress indicators) with the same roles. Material widgets used next to
-/// design system components therefore match them.
+/// Built-in: each theme installs the brand's [DsTokens] as its single design
+/// system [ThemeExtension], and aligns the Material color scheme, text
+/// theme, text selection, and component themes (app bar, input fields, list
+/// tiles, cards, dividers, and progress indicators) with the same tokens.
+/// Material widgets used next to design system components therefore match
+/// the brand.
 ///
-/// Usage from a host:
+/// Rules:
+/// * Brand and mode switches are instant. Pass `themeAnimationStyle:
+///   AnimationStyle.noAnimation` to `MaterialApp`; replacing the brand then
+///   keeps the navigator and every widget's state, and shows the new brand
+///   on the next frame.
+/// * Light and dark mode come from the app's `themeMode`, never from the
+///   brand.
+///
+/// Usage from the App Shell:
 /// ```dart
 /// MaterialApp.router(
 ///   theme: DsTheme.light(brand: brand),
 ///   darkTheme: DsTheme.dark(brand: brand),
+///   themeMode: themeMode,
+///   themeAnimationStyle: AnimationStyle.noAnimation,
 ///   routerConfig: router,
 /// );
 /// ```
 abstract final class DsTheme {
-  /// Returns the light theme for [brand].
+  /// Returns the light theme of [brand].
   ///
   /// Parameters:
-  /// * [brand] - The brand the action, focus, and information roles and the
-  ///   font family derive from. Defaults to [DsBrand.standard].
-  static ThemeData light({DsBrand brand = DsBrand.standard}) => _theme(
-    Brightness.light,
-    brand,
-    _resolveColors(
-      brand,
-      background: DsPalette.neutral50,
-      surface: DsPalette.neutral0,
-      surfaceVariant: DsPalette.neutral100,
-      border: DsPalette.neutral300,
-      textPrimary: DsPalette.neutral900,
-      textSecondary: DsPalette.neutral600,
-      textDisabled: DsPalette.neutral400,
-      actionDisabled: DsPalette.neutral200,
-      contrastEnd: DsPalette.neutral900,
-      infoTint: 0.10,
-      successBackground: DsPalette.success100,
-      successForeground: DsPalette.success700,
-      warningBackground: DsPalette.warning100,
-      warningForeground: DsPalette.warning700,
-      errorBackground: DsPalette.error100,
-      errorForeground: DsPalette.error700,
-    ),
-  );
+  /// * [brand] - The brand to place. Defaults to [DsBrand.whiteLabel].
+  static ThemeData light({DsBrand brand = DsBrand.whiteLabel}) =>
+      forBrightness(brand, Brightness.light);
 
-  /// Returns the dark theme for [brand].
+  /// Returns the dark theme of [brand].
   ///
   /// Parameters:
-  /// * [brand] - The brand the action, focus, and information roles and the
-  ///   font family derive from. Defaults to [DsBrand.standard].
-  static ThemeData dark({DsBrand brand = DsBrand.standard}) => _theme(
-    Brightness.dark,
-    brand,
-    _resolveColors(
-      brand,
-      background: DsPalette.neutral900,
-      surface: DsPalette.neutral800,
-      surfaceVariant: DsPalette.neutral700,
-      border: DsPalette.neutral600,
-      textPrimary: DsPalette.neutral50,
-      textSecondary: DsPalette.neutral300,
-      textDisabled: DsPalette.neutral500,
-      actionDisabled: DsPalette.neutral700,
-      contrastEnd: DsPalette.neutral0,
-      infoTint: 0.24,
-      successBackground: DsPalette.success700,
-      successForeground: DsPalette.success100,
-      warningBackground: DsPalette.warning700,
-      warningForeground: DsPalette.warning100,
-      errorBackground: DsPalette.error700,
-      errorForeground: DsPalette.error100,
-    ),
-  );
+  /// * [brand] - The brand to place. Defaults to [DsBrand.whiteLabel].
+  static ThemeData dark({DsBrand brand = DsBrand.whiteLabel}) =>
+      forBrightness(brand, Brightness.dark);
 
-  static const double _textMinimum = 4.5;
-
-  static DsColors _resolveColors(
-    DsBrand brand, {
-    required Color background,
-    required Color surface,
-    required Color surfaceVariant,
-    required Color border,
-    required Color textPrimary,
-    required Color textSecondary,
-    required Color textDisabled,
-    required Color actionDisabled,
-    required Color contrastEnd,
-    required double infoTint,
-    required Color successBackground,
-    required Color successForeground,
-    required Color warningBackground,
-    required Color warningForeground,
-    required Color errorBackground,
-    required Color errorForeground,
-  }) {
-    // The action color doubles as text color for secondary and tertiary
-    // buttons, so it must reach the text minimum on the page.
-    var action = DsContrast.ensure(
-      brand.primary,
-      against: [background, surface],
-      minimum: _textMinimum,
-      towards: contrastEnd,
+  /// Returns the theme of [brand] in [brightness].
+  ///
+  /// Parameters:
+  /// * [brand] - The brand to place.
+  /// * [brightness] - The mode to build the theme for.
+  static ThemeData forBrightness(DsBrand brand, Brightness brightness) {
+    final tokens = DsTokens.resolve(brand, brightness);
+    final colors = tokens.colors;
+    final typography = tokens.typography;
+    final radius = BorderRadius.circular(tokens.radius.md);
+    final thin = tokens.borderWidths.thin;
+    final thick = tokens.borderWidths.thick;
+    OutlineInputBorder outline(Color color, double width) => OutlineInputBorder(
+      borderRadius: radius,
+      borderSide: BorderSide(color: color, width: width),
     );
-    final textOnAction = DsContrast.bestText(
-      action,
-      light: DsPalette.neutral0,
-      dark: DsPalette.neutral900,
-    );
-    final awayFromText = textOnAction == DsPalette.neutral0
-        ? DsPalette.neutral900
-        : DsPalette.neutral0;
-    action = DsContrast.ensure(
-      action,
-      against: [textOnAction],
-      minimum: _textMinimum,
-      towards: awayFromText,
-    );
-    final infoBackground = Color.alphaBlend(
-      action.withValues(alpha: infoTint),
-      surface,
-    );
-    return DsColors(
-      background: background,
-      surface: surface,
-      surfaceVariant: surfaceVariant,
-      border: border,
-      textPrimary: textPrimary,
-      textSecondary: textSecondary,
-      textDisabled: textDisabled,
-      textOnAction: textOnAction,
-      actionPrimary: action,
-      actionPrimaryPressed: Color.lerp(action, awayFromText, 0.2)!,
-      actionDisabled: actionDisabled,
-      focus: action,
-      infoBackground: infoBackground,
-      infoForeground: DsContrast.ensure(
-        action,
-        against: [infoBackground],
-        minimum: _textMinimum,
-        towards: contrastEnd,
-      ),
-      successBackground: successBackground,
-      successForeground: successForeground,
-      warningBackground: warningBackground,
-      warningForeground: warningForeground,
-      errorBackground: errorBackground,
-      errorForeground: errorForeground,
-    );
-  }
-
-  static DsTypography _typography(String? fontFamily) => DsTypography(
-    display: TextStyle(
-      fontFamily: fontFamily,
-      fontSize: 32,
-      height: 1.25,
-      fontWeight: FontWeight.w700,
-    ),
-    headline: TextStyle(
-      fontFamily: fontFamily,
-      fontSize: 24,
-      height: 1.3,
-      fontWeight: FontWeight.w700,
-    ),
-    title: TextStyle(
-      fontFamily: fontFamily,
-      fontSize: 20,
-      height: 1.3,
-      fontWeight: FontWeight.w600,
-    ),
-    body: TextStyle(
-      fontFamily: fontFamily,
-      fontSize: 16,
-      height: 1.5,
-      fontWeight: FontWeight.w400,
-    ),
-    bodyStrong: TextStyle(
-      fontFamily: fontFamily,
-      fontSize: 16,
-      height: 1.5,
-      fontWeight: FontWeight.w600,
-    ),
-    label: TextStyle(
-      fontFamily: fontFamily,
-      fontSize: 14,
-      height: 1.4,
-      fontWeight: FontWeight.w600,
-    ),
-    caption: TextStyle(
-      fontFamily: fontFamily,
-      fontSize: 12,
-      height: 1.4,
-      fontWeight: FontWeight.w400,
-    ),
-  );
-
-  static ThemeData _theme(
-    Brightness brightness,
-    DsBrand brand,
-    DsColors colors,
-  ) {
-    final typography = _typography(brand.fontFamily);
-    final radius = BorderRadius.circular(DsRadius.md);
-    OutlineInputBorder outline(Color color, [double width = 1]) =>
-        OutlineInputBorder(
-          borderRadius: radius,
-          borderSide: BorderSide(color: color, width: width),
-        );
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      fontFamily: brand.fontFamily,
+      fontFamily: typography.body.fontFamily,
       colorScheme: ColorScheme(
         brightness: brightness,
         primary: colors.actionPrimary,
@@ -250,7 +97,14 @@ abstract final class DsTheme {
       scaffoldBackgroundColor: colors.background,
       canvasColor: colors.background,
       dividerColor: colors.border,
-      focusColor: colors.focus.withValues(alpha: 0.12),
+      focusColor: colors.focus.withValues(alpha: tokens.opacities.focused),
+      hoverColor: colors.textPrimary.withValues(
+        alpha: tokens.opacities.hovered,
+      ),
+      textSelectionTheme: TextSelectionThemeData(
+        cursorColor: colors.focus,
+        selectionHandleColor: colors.focus,
+      ),
       textTheme: TextTheme(
         displayLarge: typography.display,
         headlineMedium: typography.headline,
@@ -261,7 +115,10 @@ abstract final class DsTheme {
         labelLarge: typography.label,
         bodySmall: typography.caption,
       ).apply(bodyColor: colors.textPrimary, displayColor: colors.textPrimary),
-      iconTheme: IconThemeData(color: colors.textSecondary),
+      iconTheme: IconThemeData(
+        color: colors.textSecondary,
+        size: tokens.iconSizes.md,
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.background,
         foregroundColor: colors.textPrimary,
@@ -280,12 +137,12 @@ abstract final class DsTheme {
         hintStyle: typography.body.copyWith(color: colors.textSecondary),
         helperStyle: typography.caption.copyWith(color: colors.textSecondary),
         errorStyle: typography.caption.copyWith(color: colors.errorForeground),
-        border: outline(colors.border),
-        enabledBorder: outline(colors.textSecondary),
-        focusedBorder: outline(colors.focus, 2),
-        errorBorder: outline(colors.errorForeground),
-        focusedErrorBorder: outline(colors.errorForeground, 2),
-        disabledBorder: outline(colors.actionDisabled),
+        border: outline(colors.border, thin),
+        enabledBorder: outline(colors.textSecondary, thin),
+        focusedBorder: outline(colors.focus, thick),
+        errorBorder: outline(colors.errorForeground, thin),
+        focusedErrorBorder: outline(colors.errorForeground, thick),
+        disabledBorder: outline(colors.actionDisabled, thin),
       ),
       listTileTheme: ListTileThemeData(
         textColor: colors.textPrimary,
@@ -301,14 +158,18 @@ abstract final class DsTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: radius,
-          side: BorderSide(color: colors.border),
+          side: BorderSide(color: colors.border, width: thin),
         ),
       ),
-      dividerTheme: DividerThemeData(color: colors.border, space: 1),
+      dividerTheme: DividerThemeData(
+        color: colors.border,
+        thickness: thin,
+        space: thin,
+      ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: colors.actionPrimary,
       ),
-      extensions: [colors, typography],
+      extensions: [tokens],
     );
   }
 }

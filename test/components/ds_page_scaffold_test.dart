@@ -4,27 +4,20 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../helpers/a11y_harness.dart';
+import '../support/ds_a11y_harness.dart';
+import '../support/ds_component_cases.dart';
 
 Widget _app(Widget home) => MaterialApp(theme: DsTheme.light(), home: home);
 
 void main() {
   group('Given a DsPageScaffold', () {
-    DsA11yHarness.describeRules({
-      'with a body and a primary action': () => DsPageScaffold(
-        title: 'New transfer to a saved recipient',
-        body: const Text('Choose who receives the money.'),
-        primaryAction: DsButton(label: 'Continue', onPressed: () {}),
-        onBack: () {},
-      ),
-      'with a body only': () => const DsPageScaffold(
-        title: 'Accounts',
-        body: Text('No accounts yet.'),
-      ),
-    }, scrollable: false);
+    DsA11yHarness.describeRules(
+      DsComponentCases.pageScaffold.states,
+      scrollable: false,
+    );
 
     testWidgets('When it is built, Then it shows the title and pads the body '
-        'by DsSpacing.md', (tester) async {
+        'by DsBrand.whiteLabel.spacing.md', (tester) async {
       // Given
       const page = DsPageScaffold(
         title: 'Accounts',
@@ -38,8 +31,8 @@ void main() {
       expect(find.text('Accounts'), findsOneWidget);
       final body = tester.getRect(find.byKey(const Key('body')));
       final scaffold = tester.getRect(find.byType(DsPageScaffold));
-      expect(body.left - scaffold.left, DsSpacing.md);
-      expect(scaffold.right - body.right, DsSpacing.md);
+      expect(body.left - scaffold.left, DsBrand.whiteLabel.spacing.md);
+      expect(scaffold.right - body.right, DsBrand.whiteLabel.spacing.md);
     });
 
     testWidgets('When it has a primary action, '
@@ -59,8 +52,8 @@ void main() {
       // Then
       final scaffold = tester.getRect(find.byType(DsPageScaffold));
       final action = tester.getRect(find.byType(DsButton));
-      expect(action.width, scaffold.width - 2 * DsSpacing.md);
-      expect(scaffold.bottom - action.bottom, DsSpacing.md);
+      expect(action.width, scaffold.width - 2 * DsBrand.whiteLabel.spacing.md);
+      expect(scaffold.bottom - action.bottom, DsBrand.whiteLabel.spacing.md);
     });
 
     testWidgets('When onBack is set and back is tapped, Then onBack runs', (

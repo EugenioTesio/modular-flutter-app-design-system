@@ -3,6 +3,10 @@
 All notable changes to the `design_system` package. The package follows
 semantic versioning; Foundations' changelog states which version it delivers.
 
+## [Unreleased]
+
+Changes for the next release are collected here.
+
 ## 0.1.1
 
 Moved to its own repository. No API or behavior change.

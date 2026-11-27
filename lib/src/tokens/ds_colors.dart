@@ -1,35 +1,35 @@
-/// @docImport 'package:flutter/material.dart';
-/// @docImport '../theme/ds_brand.dart';
+/// @docImport '../brand/ds_brand.dart';
+/// @docImport '../brand/ds_color_scale.dart';
 /// @docImport '../theme/ds_theme.dart';
 /// @docImport '../theme/ds_theme_context.dart';
-/// @docImport 'ds_palette.dart';
 library;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 
-/// Semantic color roles, resolved for the active theme and brand.
+import 'ds_color_role.dart';
+
+/// Value that holds the semantic color roles of one brand in one mode.
 ///
 /// Use this for every color in a screen, through `context.dsColors`: text in
 /// [textPrimary] or [textSecondary], cards on [surface], and so on. A role
 /// names what the color is for, so dark mode and brand changes restyle the
 /// screen with no code change.
 ///
-/// This is **not** the palette: [DsPalette] holds the fixed base colors, and
-/// only themes read it.
+/// This is **not** a brand's palette: [DsBrand.colors] holds the primitive
+/// scales, and only the design system reads them.
 ///
-/// Built-in: [DsTheme.light] and [DsTheme.dark] create it from a [DsBrand]
-/// and install it as a [ThemeExtension] of the [ThemeData].
+/// Built-in: the design system derives these roles from the nearest
+/// [DsBrand], with one mapping it owns for light and dark mode. Brands can't
+/// override a role, and no primitive value is ever adjusted.
 ///
-/// Contrast guarantees, in both themes:
-/// * [textPrimary] and [textSecondary] reach at least 4.5:1 on [background],
-///   [surface], and [surfaceVariant].
-/// * [textOnAction] reaches at least 4.5:1 on [actionPrimary] and
-///   [actionPrimaryPressed].
-/// * [actionPrimary] reaches at least 4.5:1 on [background] and [surface], so
-///   it also works as text color. That is above the 3:1 interface minimum.
-/// * Each message foreground reaches at least 4.5:1 on its background, and
-///   [errorForeground] also on [background] and [surface].
-/// * [textDisabled] has no minimum: disabled controls are exempt.
+/// Rules:
+/// * [textOnAction] is the neutral end, white or near black, with more
+///   contrast against [actionPrimary].
+/// * [textDisabled] and [actionDisabled] have no contrast minimum, because
+///   disabled controls are exempt.
+/// * Whether a brand reaches the other contrast minimums is checked, never
+///   corrected.
 ///
 /// Usage from a micro app:
 /// ```dart
@@ -40,9 +40,9 @@ import 'package:flutter/material.dart';
 /// );
 /// ```
 @immutable
-final class DsColors extends ThemeExtension<DsColors> {
-  /// Creates a set of color roles. Themes call this; screens read the roles
-  /// through `context.dsColors` instead.
+final class DsColors {
+  /// Creates a set of color roles. The design system calls this; screens
+  /// read the roles through `context.dsColors` instead.
   ///
   /// Parameters:
   /// * [background] - Background color of a page.
@@ -148,108 +148,78 @@ final class DsColors extends ThemeExtension<DsColors> {
   /// Color of text and icons on [errorBackground], and of error text, such as a field's error, on [background] and [surface].
   final Color errorForeground;
 
-  /// Returns a copy of these roles with the given roles replaced.
-  ///
-  /// Parameters: each parameter replaces the role of the same name; a null
-  /// parameter keeps the current role.
-  @override
-  DsColors copyWith({
-    Color? background,
-    Color? surface,
-    Color? surfaceVariant,
-    Color? border,
-    Color? textPrimary,
-    Color? textSecondary,
-    Color? textDisabled,
-    Color? textOnAction,
-    Color? actionPrimary,
-    Color? actionPrimaryPressed,
-    Color? actionDisabled,
-    Color? focus,
-    Color? infoBackground,
-    Color? infoForeground,
-    Color? successBackground,
-    Color? successForeground,
-    Color? warningBackground,
-    Color? warningForeground,
-    Color? errorBackground,
-    Color? errorForeground,
-  }) {
-    return DsColors(
-      background: background ?? this.background,
-      surface: surface ?? this.surface,
-      surfaceVariant: surfaceVariant ?? this.surfaceVariant,
-      border: border ?? this.border,
-      textPrimary: textPrimary ?? this.textPrimary,
-      textSecondary: textSecondary ?? this.textSecondary,
-      textDisabled: textDisabled ?? this.textDisabled,
-      textOnAction: textOnAction ?? this.textOnAction,
-      actionPrimary: actionPrimary ?? this.actionPrimary,
-      actionPrimaryPressed: actionPrimaryPressed ?? this.actionPrimaryPressed,
-      actionDisabled: actionDisabled ?? this.actionDisabled,
-      focus: focus ?? this.focus,
-      infoBackground: infoBackground ?? this.infoBackground,
-      infoForeground: infoForeground ?? this.infoForeground,
-      successBackground: successBackground ?? this.successBackground,
-      successForeground: successForeground ?? this.successForeground,
-      warningBackground: warningBackground ?? this.warningBackground,
-      warningForeground: warningForeground ?? this.warningForeground,
-      errorBackground: errorBackground ?? this.errorBackground,
-      errorForeground: errorForeground ?? this.errorForeground,
-    );
-  }
-
-  /// Returns the roles between these and [other], for animated theme
-  /// changes.
+  /// Returns the color of [role].
   ///
   /// Parameters:
-  /// * [other] - The roles to move toward. When it is not a [DsColors], these
-  ///   roles are returned unchanged.
-  /// * [t] - The position between the two, from 0 (these) to 1 ([other]).
+  /// * [role] - The role to read.
+  Color role(DsColorRole role) => switch (role) {
+    DsColorRole.background => background,
+    DsColorRole.surface => surface,
+    DsColorRole.surfaceVariant => surfaceVariant,
+    DsColorRole.border => border,
+    DsColorRole.textPrimary => textPrimary,
+    DsColorRole.textSecondary => textSecondary,
+    DsColorRole.textDisabled => textDisabled,
+    DsColorRole.textOnAction => textOnAction,
+    DsColorRole.actionPrimary => actionPrimary,
+    DsColorRole.actionPrimaryPressed => actionPrimaryPressed,
+    DsColorRole.actionDisabled => actionDisabled,
+    DsColorRole.focus => focus,
+    DsColorRole.infoBackground => infoBackground,
+    DsColorRole.infoForeground => infoForeground,
+    DsColorRole.successBackground => successBackground,
+    DsColorRole.successForeground => successForeground,
+    DsColorRole.warningBackground => warningBackground,
+    DsColorRole.warningForeground => warningForeground,
+    DsColorRole.errorBackground => errorBackground,
+    DsColorRole.errorForeground => errorForeground,
+  };
+
   @override
-  DsColors lerp(covariant ThemeExtension<DsColors>? other, double t) {
-    if (other is! DsColors) return this;
-    return DsColors(
-      background: Color.lerp(background, other.background, t)!,
-      surface: Color.lerp(surface, other.surface, t)!,
-      surfaceVariant: Color.lerp(surfaceVariant, other.surfaceVariant, t)!,
-      border: Color.lerp(border, other.border, t)!,
-      textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
-      textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
-      textDisabled: Color.lerp(textDisabled, other.textDisabled, t)!,
-      textOnAction: Color.lerp(textOnAction, other.textOnAction, t)!,
-      actionPrimary: Color.lerp(actionPrimary, other.actionPrimary, t)!,
-      actionPrimaryPressed: Color.lerp(
-        actionPrimaryPressed,
-        other.actionPrimaryPressed,
-        t,
-      )!,
-      actionDisabled: Color.lerp(actionDisabled, other.actionDisabled, t)!,
-      focus: Color.lerp(focus, other.focus, t)!,
-      infoBackground: Color.lerp(infoBackground, other.infoBackground, t)!,
-      infoForeground: Color.lerp(infoForeground, other.infoForeground, t)!,
-      successBackground: Color.lerp(
-        successBackground,
-        other.successBackground,
-        t,
-      )!,
-      successForeground: Color.lerp(
-        successForeground,
-        other.successForeground,
-        t,
-      )!,
-      warningBackground: Color.lerp(
-        warningBackground,
-        other.warningBackground,
-        t,
-      )!,
-      warningForeground: Color.lerp(
-        warningForeground,
-        other.warningForeground,
-        t,
-      )!,
-      errorBackground: Color.lerp(errorBackground, other.errorBackground, t)!,
-      errorForeground: Color.lerp(errorForeground, other.errorForeground, t)!,
-    );
-  }
+  bool operator ==(Object other) =>
+      other is DsColors &&
+      other.background == background &&
+      other.surface == surface &&
+      other.surfaceVariant == surfaceVariant &&
+      other.border == border &&
+      other.textPrimary == textPrimary &&
+      other.textSecondary == textSecondary &&
+      other.textDisabled == textDisabled &&
+      other.textOnAction == textOnAction &&
+      other.actionPrimary == actionPrimary &&
+      other.actionPrimaryPressed == actionPrimaryPressed &&
+      other.actionDisabled == actionDisabled &&
+      other.focus == focus &&
+      other.infoBackground == infoBackground &&
+      other.infoForeground == infoForeground &&
+      other.successBackground == successBackground &&
+      other.successForeground == successForeground &&
+      other.warningBackground == warningBackground &&
+      other.warningForeground == warningForeground &&
+      other.errorBackground == errorBackground &&
+      other.errorForeground == errorForeground;
+
+  @override
+  int get hashCode => Object.hashAll([
+    background,
+    surface,
+    surfaceVariant,
+    border,
+    textPrimary,
+    textSecondary,
+    textDisabled,
+    textOnAction,
+    actionPrimary,
+    actionPrimaryPressed,
+    actionDisabled,
+    focus,
+    infoBackground,
+    infoForeground,
+    successBackground,
+    successForeground,
+    warningBackground,
+    warningForeground,
+    errorBackground,
+    errorForeground,
+  ]);
 }

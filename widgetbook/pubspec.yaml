@@ -1,0 +1,30 @@
+name: design_system_widgetbook
+description: >-
+  Internal Widgetbook of the design system: every component in every brand,
+  mode, and viewport. Local use only; never published or hosted.
+publish_to: none
+version: 0.2.0
+
+environment:
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  design_system:
+    path: ../
+  # Pinned exactly: the manual catalog uses Widgetbook's node and addon APIs.
+  widgetbook: 3.25.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    # The repository's only brands folder. Drop a brand file here and
+    # restart to see it in the brand switcher.
+    - brands/

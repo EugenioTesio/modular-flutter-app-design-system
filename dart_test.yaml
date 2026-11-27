@@ -1,0 +1,6 @@
+# Test tags (see the golden-test and QA contracts).
+tags:
+  # Golden image comparisons, run with the 5% comparator.
+  golden:
+  # QA identifier checks, run with --dart-define=DS_QA_IDENTIFIERS=true.
+  qa:

@@ -5,7 +5,8 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../helpers/a11y_harness.dart';
+import '../support/ds_a11y_harness.dart';
+import '../support/ds_component_cases.dart';
 
 (Color, Color) _rolesFor(DsMessageTone tone, DsColors c) => switch (tone) {
   DsMessageTone.info => (c.infoBackground, c.infoForeground),
@@ -16,19 +17,7 @@ import '../helpers/a11y_harness.dart';
 
 void main() {
   group('Given a DsInlineMessage', () {
-    DsA11yHarness.describeRules({
-      for (final tone in DsMessageTone.values)
-        'a ${tone.name} message with a title and an action': () =>
-            DsInlineMessage(
-              tone: tone,
-              title: 'Balance unavailable',
-              message: 'Check your connection and try again in a minute.',
-              actionLabel: 'Retry',
-              onAction: () {},
-            ),
-      'a message only': () =>
-          const DsInlineMessage(message: 'Transfers made today appear here.'),
-    });
+    DsA11yHarness.describeRules(DsComponentCases.inlineMessage.states);
 
     for (final (name, theme) in DsA11yHarness.themes) {
       testWidgets('When each tone is built in the $name theme, '
@@ -36,7 +25,7 @@ void main() {
         tester,
       ) async {
         // Given
-        final colors = theme.extension<DsColors>()!;
+        final colors = theme.extension<DsTokens>()!.colors;
 
         for (final tone in DsMessageTone.values) {
           // When

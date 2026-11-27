@@ -5,7 +5,8 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../helpers/a11y_harness.dart';
+import '../support/ds_a11y_harness.dart';
+import '../support/ds_component_cases.dart';
 
 void _noop() {}
 
@@ -15,35 +16,14 @@ Material _materialOf(WidgetTester tester) => tester.widget<Material>(
 
 void main() {
   group('Given a DsButton', () {
-    DsA11yHarness.describeRules({
-      'primary': () => const DsButton(label: 'Continue', onPressed: _noop),
-      'secondary': () => const DsButton(
-        label: 'Cancel',
-        onPressed: _noop,
-        variant: DsButtonVariant.secondary,
-      ),
-      'tertiary': () => const DsButton(
-        label: 'Skip',
-        onPressed: _noop,
-        variant: DsButtonVariant.tertiary,
-      ),
-      'primary with an icon and a long label': () => const DsButton(
-        label: 'Send the transfer to a saved recipient',
-        icon: Icons.send,
-        onPressed: _noop,
-        expand: true,
-      ),
-      'disabled': () => const DsButton(label: 'Continue', onPressed: null),
-      'loading': () =>
-          const DsButton(label: 'Continue', onPressed: _noop, isLoading: true),
-    });
+    DsA11yHarness.describeRules(DsComponentCases.button.states);
   });
 
   group('Given a disabled DsButton', () {
     testWidgets('When it is tapped, Then nothing happens and it uses the '
         'disabled roles', (tester) async {
       // Given
-      final colors = DsTheme.light().extension<DsColors>()!;
+      final colors = DsTheme.light().extension<DsTokens>()!.colors;
       await DsA11yHarness.pump(
         tester,
         const DsButton(label: 'Continue', onPressed: null),
@@ -74,7 +54,7 @@ void main() {
         'keeps its label, and keeps the enabled colors', (tester) async {
       // Given
       var taps = 0;
-      final colors = DsTheme.light().extension<DsColors>()!;
+      final colors = DsTheme.light().extension<DsTokens>()!.colors;
       await DsA11yHarness.pump(
         tester,
         DsButton(label: 'Continue', onPressed: () => taps++),
@@ -121,7 +101,7 @@ void main() {
     testWidgets('When each variant is built, Then only primary is filled and '
         'only secondary is outlined', (tester) async {
       // Given
-      final colors = DsTheme.light().extension<DsColors>()!;
+      final colors = DsTheme.light().extension<DsTokens>()!.colors;
       final looks = <DsButtonVariant, (Color?, BorderSide)>{};
 
       // When
@@ -157,7 +137,7 @@ void main() {
       // Then
       final width = tester.getSize(find.byType(DsButton)).width;
       final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
-      expect(width, screen.width - 2 * DsSpacing.md);
+      expect(width, screen.width - 2 * DsBrand.whiteLabel.spacing.md);
     });
   });
 }

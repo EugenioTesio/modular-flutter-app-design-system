@@ -18,6 +18,28 @@ flutter analyze
 flutter test
 ```
 
+### Golden images
+
+Each component's states are compared with golden images in `test/components/goldens/`, one per state, brand, and mode. A comparison passes when at most 5% of the pixels differ, so images generated on macOS also pass on Linux. A failure writes difference images to a git-ignored `failures/` folder.
+
+Run only the golden tests:
+
+```bash
+flutter test --tags golden
+```
+
+After an intentional visual change, regenerate the images, then review them in the diff:
+
+```bash
+flutter test --update-goldens --tags golden
+```
+
+Check them on Linux with Docker:
+
+```bash
+docker run --rm -v "$PWD":/w -w /w ghcr.io/cirruslabs/flutter:3.47.9 flutter test --tags golden
+```
+
 The `example/` app is a gallery of every component:
 
 ```bash
