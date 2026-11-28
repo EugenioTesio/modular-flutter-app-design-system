@@ -1,0 +1,18 @@
+name: design_system_lints
+description: >-
+  Analyzer plugin that keeps code on the design system's tokens: it reports
+  literal colors, spacing, and component values, and primitive colors in
+  components. Dev-only; never a runtime dependency.
+version: 0.2.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  analysis_server_plugin: 0.3.26
+  analyzer: 14.7.0
+
+dev_dependencies:
+  analyzer_testing: 0.4.5
+  test: ^1.26.0

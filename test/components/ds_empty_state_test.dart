@@ -5,24 +5,12 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../helpers/a11y_harness.dart';
+import '../support/ds_a11y_harness.dart';
+import '../support/ds_component_cases.dart';
 
 void main() {
   group('Given a DsEmptyState', () {
-    DsA11yHarness.describeRules({
-      'without an action': () => const DsEmptyState(
-        icon: Icons.receipt_long,
-        title: 'No transfers yet',
-        message: 'Transfers you make appear here.',
-      ),
-      'with an action': () => DsEmptyState(
-        icon: Icons.receipt_long,
-        title: 'No transfers yet',
-        message: 'Transfers you make appear here.',
-        actionLabel: 'New transfer',
-        onAction: () {},
-      ),
-    });
+    DsA11yHarness.describeRules(DsComponentCases.emptyState.states);
 
     testWidgets('When it has no action, Then it shows no button', (
       tester,

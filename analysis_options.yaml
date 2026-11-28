@@ -1,5 +1,4 @@
-# Static analysis for the interim design system. Same rules as Foundations
-# (research R16). `flutter analyze` must report 0 issues.
+# Static analysis for the design system. `flutter analyze` must report 0 issues.
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
@@ -8,8 +7,10 @@ analyzer:
     strict-inference: true
     strict-raw-types: true
   exclude:
-    # The gallery app is analyzed on its own.
-    - example/**
+    # The Widgetbook app and the lint plugin are separate projects, analyzed
+    # on their own.
+    - widgetbook/**
+    - lints/**
     - build/**
 
 linter:
@@ -19,3 +20,9 @@ linter:
     - always_declare_return_types
     - prefer_final_fields
     - avoid_dynamic_calls
+
+# The design system's own token lint (design_system_lints in lints/). Every
+# component must report 0 diagnostics.
+plugins:
+  design_system_lints:
+    path: lints

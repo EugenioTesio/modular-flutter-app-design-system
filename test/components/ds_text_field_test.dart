@@ -5,30 +5,19 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../helpers/a11y_harness.dart';
+import '../support/ds_a11y_harness.dart';
+import '../support/ds_component_cases.dart';
 
 void main() {
   group('Given a DsTextField', () {
-    DsA11yHarness.describeRules({
-      'labeled': () => const DsTextField(label: 'Email'),
-      'showing a hint and helper text': () => const DsTextField(
-        label: 'Email',
-        hint: 'name@example.com',
-        helperText: 'We send the receipt to this address.',
-      ),
-      'showing an error': () => const DsTextField(
-        label: 'Amount',
-        errorText: 'Enter an amount greater than zero.',
-      ),
-      'disabled': () => const DsTextField(label: 'Email', enabled: false),
-    });
+    DsA11yHarness.describeRules(DsComponentCases.textField.states);
   });
 
   group('Given a DsTextField with an error', () {
     testWidgets('When it is built, Then the error shows in errorForeground '
         'and is exposed to screen readers', (tester) async {
       // Given
-      final colors = DsTheme.light().extension<DsColors>()!;
+      final colors = DsTheme.light().extension<DsTokens>()!.colors;
       const error = 'Enter an amount greater than zero.';
 
       // When
@@ -51,7 +40,7 @@ void main() {
     testWidgets('When it is tapped, Then it takes no focus and uses the '
         'disabled roles', (tester) async {
       // Given
-      final colors = DsTheme.light().extension<DsColors>()!;
+      final colors = DsTheme.light().extension<DsTokens>()!.colors;
       await DsA11yHarness.pump(
         tester,
         const DsTextField(label: 'Email', enabled: false),

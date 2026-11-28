@@ -1,26 +1,26 @@
-/// @docImport '../theme/ds_brand.dart';
-/// @docImport '../theme/ds_theme.dart';
+/// @docImport '../brand/ds_brand.dart';
+/// @docImport '../theme/ds_theme_context.dart';
 /// @docImport 'ds_colors.dart';
 library;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 
-/// Semantic text styles, resolved for the active theme and brand.
+import '../brand/ds_brand_typography.dart';
+
+/// Value that holds the text styles of one brand.
 ///
 /// Use this for every text style in a screen, through `context.dsTypography`,
 /// and add the color from [DsColors]: `typography.body.copyWith(color:
 /// colors.textSecondary)`.
 ///
-/// This is **not** a color source: the styles carry size, weight, line
-/// height, and font family only, so the same style works on any background.
+/// This is **not** a color source: the styles carry font, size, weight, line
+/// height, and letter spacing only, so the same style works on any
+/// background.
 ///
-/// Built-in: [DsTheme.light] and [DsTheme.dark] create it with the font
-/// family of [DsBrand.fontFamily] and install it as a [ThemeExtension]. When
-/// the brand names no font, the styles use the platform font.
-///
-/// Sizes: [display] 32, [headline] 24, [title] 20, [body] and [bodyStrong]
-/// 16, [label] 14, and [caption] 12. They scale with the user's text size
-/// setting.
+/// Built-in: the design system builds it from the nearest [DsBrand]'s type
+/// scale. A font family that the app doesn't bundle falls back to the
+/// platform font. The styles scale with the user's text size setting.
 ///
 /// Usage from a micro app:
 /// ```dart
@@ -31,9 +31,9 @@ import 'package:flutter/material.dart';
 /// );
 /// ```
 @immutable
-final class DsTypography extends ThemeExtension<DsTypography> {
-  /// Creates a set of text styles. Themes call this; screens read the styles
-  /// through `context.dsTypography` instead.
+final class DsTypography {
+  /// Creates a set of text styles. The design system calls this; screens
+  /// read the styles through `context.dsTypography` instead.
   ///
   /// Parameters:
   /// * [display] - Style of the largest text, such as an amount on a summary.
@@ -52,6 +52,19 @@ final class DsTypography extends ThemeExtension<DsTypography> {
     required this.label,
     required this.caption,
   });
+
+  /// Creates the text styles of a brand's type scale.
+  ///
+  /// Parameters:
+  /// * [typography] - The brand's type scale.
+  DsTypography.fromBrand(DsBrandTypography typography)
+    : display = typography.display.toTextStyle(),
+      headline = typography.headline.toTextStyle(),
+      title = typography.title.toTextStyle(),
+      body = typography.body.toTextStyle(),
+      bodyStrong = typography.bodyStrong.toTextStyle(),
+      label = typography.label.toTextStyle(),
+      caption = typography.caption.toTextStyle();
 
   /// Style of the largest text, such as an amount on a summary.
   final TextStyle display;
@@ -74,49 +87,18 @@ final class DsTypography extends ThemeExtension<DsTypography> {
   /// Style of small supporting text.
   final TextStyle caption;
 
-  /// Returns a copy of these styles with the given styles replaced.
-  ///
-  /// Parameters: each parameter replaces the style of the same name; a null
-  /// parameter keeps the current style.
   @override
-  DsTypography copyWith({
-    TextStyle? display,
-    TextStyle? headline,
-    TextStyle? title,
-    TextStyle? body,
-    TextStyle? bodyStrong,
-    TextStyle? label,
-    TextStyle? caption,
-  }) {
-    return DsTypography(
-      display: display ?? this.display,
-      headline: headline ?? this.headline,
-      title: title ?? this.title,
-      body: body ?? this.body,
-      bodyStrong: bodyStrong ?? this.bodyStrong,
-      label: label ?? this.label,
-      caption: caption ?? this.caption,
-    );
-  }
+  bool operator ==(Object other) =>
+      other is DsTypography &&
+      other.display == display &&
+      other.headline == headline &&
+      other.title == title &&
+      other.body == body &&
+      other.bodyStrong == bodyStrong &&
+      other.label == label &&
+      other.caption == caption;
 
-  /// Returns the styles between these and [other], for animated theme
-  /// changes.
-  ///
-  /// Parameters:
-  /// * [other] - The styles to move toward. When it is not a [DsTypography],
-  ///   these styles are returned unchanged.
-  /// * [t] - The position between the two, from 0 (these) to 1 ([other]).
   @override
-  DsTypography lerp(covariant ThemeExtension<DsTypography>? other, double t) {
-    if (other is! DsTypography) return this;
-    return DsTypography(
-      display: TextStyle.lerp(display, other.display, t)!,
-      headline: TextStyle.lerp(headline, other.headline, t)!,
-      title: TextStyle.lerp(title, other.title, t)!,
-      body: TextStyle.lerp(body, other.body, t)!,
-      bodyStrong: TextStyle.lerp(bodyStrong, other.bodyStrong, t)!,
-      label: TextStyle.lerp(label, other.label, t)!,
-      caption: TextStyle.lerp(caption, other.caption, t)!,
-    );
-  }
+  int get hashCode =>
+      Object.hash(display, headline, title, body, bodyStrong, label, caption);
 }

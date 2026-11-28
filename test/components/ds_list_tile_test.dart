@@ -4,20 +4,12 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../helpers/a11y_harness.dart';
+import '../support/ds_a11y_harness.dart';
+import '../support/ds_component_cases.dart';
 
 void main() {
   group('Given a DsListTile', () {
-    DsA11yHarness.describeRules({
-      'a title only': () => const DsListTile(title: 'Checking'),
-      'tappable with every slot': () => DsListTile(
-        title: 'Everyday checking account with a long name',
-        subtitle: '•••• 4821 · Opened in 2019 at the downtown branch',
-        leading: const Icon(Icons.account_balance),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () {},
-      ),
-    });
+    DsA11yHarness.describeRules(DsComponentCases.listTile.states);
 
     testWidgets('When a tappable row is tapped, '
         'Then onTap runs and the row is labeled by its text', (tester) async {
@@ -45,7 +37,7 @@ void main() {
     testWidgets('When it is built, Then the title uses textPrimary and the '
         'subtitle textSecondary', (tester) async {
       // Given
-      final colors = DsTheme.light().extension<DsColors>()!;
+      final colors = DsTheme.light().extension<DsTokens>()!.colors;
 
       // When
       await DsA11yHarness.pump(

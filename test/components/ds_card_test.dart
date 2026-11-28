@@ -5,20 +5,12 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../helpers/a11y_harness.dart';
+import '../support/ds_a11y_harness.dart';
+import '../support/ds_component_cases.dart';
 
 void main() {
   group('Given a DsCard', () {
-    DsA11yHarness.describeRules({
-      'static': () => const DsCard(child: Text('Checking account')),
-      'tappable with a label': () => DsCard(
-        onTap: () {},
-        semanticsLabel: 'Checking account, balance 1,250',
-        child: const Text('Checking account'),
-      ),
-      'tappable without a label': () =>
-          DsCard(onTap: () {}, child: const Text('Savings account')),
-    });
+    DsA11yHarness.describeRules(DsComponentCases.card.states);
 
     testWidgets('When a tappable card is tapped, '
         'Then onTap runs and screen readers see one labeled button', (
@@ -50,7 +42,7 @@ void main() {
     testWidgets('When a card is built, '
         'Then it uses the surface and border roles', (tester) async {
       // Given
-      final colors = DsTheme.dark().extension<DsColors>()!;
+      final colors = DsTheme.dark().extension<DsTokens>()!.colors;
 
       // When
       await DsA11yHarness.pump(
