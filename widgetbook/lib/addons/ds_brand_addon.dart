@@ -11,18 +11,24 @@ final class DsBrandAddon extends WidgetbookAddon<DsBrand> {
   /// Creates a brand addon.
   ///
   /// [brands] lists the brands to offer, the first one selected.
-  DsBrandAddon(this.brands)
+  /// [failingContrast] holds the brands that fail the contrast gate; they
+  /// stay selectable, labelled with a warning.
+  DsBrandAddon(this.brands, {this.failingContrast = const {}})
     : assert(brands.isNotEmpty, 'The brand addon needs a brand.'),
       super(name: 'Brand');
 
   /// The brands the switcher offers.
   final List<DsBrand> brands;
 
+  /// Brands that fail the contrast gate.
+  final Set<DsBrand> failingContrast;
+
   /// Label of a brand in the switcher: its name, plus its id when another
-  /// brand has the same name.
+  /// brand has the same name, after `⚠ ` when it fails the contrast gate.
   String label(DsBrand brand) {
     final sameName = brands.where((other) => other.name == brand.name).length;
-    return sameName > 1 ? '${brand.name} (${brand.id})' : brand.name;
+    final name = sameName > 1 ? '${brand.name} (${brand.id})' : brand.name;
+    return failingContrast.contains(brand) ? '⚠ $name' : name;
   }
 
   @override

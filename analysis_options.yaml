@@ -20,3 +20,9 @@ linter:
     - always_declare_return_types
     - prefer_final_fields
     - avoid_dynamic_calls
+
+# The design system's own token lint (design_system_lints in lints/). Every
+# component must report 0 diagnostics.
+plugins:
+  design_system_lints:
+    path: lints

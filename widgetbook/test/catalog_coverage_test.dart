@@ -3,11 +3,13 @@
 import 'dart:io';
 
 import 'package:design_system/design_system.dart';
+import 'package:design_system_widgetbook/addons/ds_brand_addon.dart';
 import 'package:design_system_widgetbook/brand_files/brand_file_loader.dart';
+import 'package:design_system_widgetbook/brand_files/brand_file_use_cases.dart';
 import 'package:design_system_widgetbook/catalog/catalog_directory.dart';
 import 'package:design_system_widgetbook/use_cases/component_use_cases.dart';
 import 'package:design_system_widgetbook/widgetbook_app.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:widgetbook/widgetbook.dart';
 
@@ -111,6 +113,79 @@ void main() {
         brandFiles.children!.map((node) => node.name),
         containsAll(['White label', 'Forest', '⚠ broken.json']),
       );
+    });
+  });
+
+  group('Given a brands folder with one valid brand that fails the contrast '
+      'gate', () {
+    final files = {
+      ..._repositoryFiles(),
+      'pale_brand.json': File('../test/contrast/fixtures/pale_brand.json')
+          .readAsStringSync(),
+    };
+
+    test('When the Widgetbook loads it, '
+        'Then the brand is selectable and labelled with a warning', () {
+      // Given
+      final brands = BrandFileLoader.fromContents(files);
+
+      // When
+      final addon = DsBrandAddon(
+        brands.selectable,
+        failingContrast: brands.failingContrast,
+      );
+
+      // Then
+      final pale = brands.selectable.singleWhere((brand) => brand.id == 'pale');
+      expect(brands.failingContrast, {pale});
+      expect(addon.label(pale), '⚠ Pale');
+      expect(addon.label(DsBrand.whiteLabel), 'White label');
+      final file = brands.files.singleWhere(
+        (file) => file.fileName == 'pale_brand.json',
+      );
+      expect(file.contrast!.passed, isFalse);
+    });
+
+    testWidgets('When its Brand files page is shown, '
+        'Then it lists every failing pair', (tester) async {
+      // Given
+      tester.view
+        ..physicalSize = const Size(1200, 4000)
+        ..devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final brands = BrandFileLoader.fromContents(files);
+      final file = brands.files.singleWhere(
+        (file) => file.fileName == 'pale_brand.json',
+      );
+      final brandFiles =
+          CatalogDirectory.build(
+            useCases: ComponentUseCases.all,
+            brands: brands,
+          ).whereType<WidgetbookCategory>().singleWhere(
+            (node) => node.name == 'Brand files',
+          );
+
+      // When
+      final page = brandFiles.children!.singleWhere(
+        (node) => node.name == '⚠ Pale',
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: DsTheme.light(),
+          home: Scaffold(
+            body: BrandTokenPreview(
+              brand: file.brand!,
+              contrast: file.contrast,
+            ),
+          ),
+        ),
+      );
+
+      // Then
+      expect(page, isA<WidgetbookComponent>());
+      for (final violation in file.contrast!.violations) {
+        expect(find.textContaining(violation.toString()), findsOneWidget);
+      }
     });
   });
 

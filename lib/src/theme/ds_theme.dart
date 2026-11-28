@@ -4,7 +4,9 @@ library;
 import 'package:flutter/material.dart';
 
 import '../brand/ds_brand.dart';
+import '../contrast/ds_contrast_gate.dart';
 import '../tokens/ds_tokens.dart';
+import 'ds_debug_warnings.dart';
 
 /// Factory for the [ThemeData] of a brand in light or dark mode: how the App
 /// Shell places the top-level brand.
@@ -21,7 +23,10 @@ import '../tokens/ds_tokens.dart';
 /// theme, text selection, and component themes (app bar, input fields, list
 /// tiles, cards, dividers, and progress indicators) with the same tokens.
 /// Material widgets used next to design system components therefore match
-/// the brand.
+/// the brand. In debug builds, the first time a brand is placed, it is
+/// checked with [DsContrastGate]; a brand that fails prints one warning that
+/// names every failing pair, and still renders exactly as its file
+/// specifies. Release builds never run the gate.
 ///
 /// Rules:
 /// * Brand and mode switches are instant. Pass `themeAnimationStyle:
@@ -62,6 +67,12 @@ abstract final class DsTheme {
   /// * [brand] - The brand to place.
   /// * [brightness] - The mode to build the theme for.
   static ThemeData forBrightness(DsBrand brand, Brightness brightness) {
+    // Debug builds check each placed brand once; release builds never run
+    // the gate.
+    DsDebugWarnings.warnOnceIfNeeded((
+      'contrast gate',
+      brand,
+    ), () => DsTheme._contrastWarning(brand));
     final tokens = DsTokens.resolve(brand, brightness);
     final colors = tokens.colors;
     final typography = tokens.typography;
@@ -171,5 +182,19 @@ abstract final class DsTheme {
       ),
       extensions: [tokens],
     );
+  }
+
+  /// Returns the debug warning for [brand], or null when it passes the
+  /// contrast gate. The text names the brand by id and the failing pairs
+  /// by role, never anything else.
+  static String? _contrastWarning(DsBrand brand) {
+    final report = DsContrastGate.check(brand);
+    if (report.passed) return null;
+    return [
+      'design_system: brand "${brand.id}" fails the contrast gate in '
+          '${report.violations.length} pair(s). It renders exactly as its '
+          'file specifies; change the brand file\'s colors to fix:',
+      for (final violation in report.violations) '  $violation',
+    ].join('\n');
   }
 }

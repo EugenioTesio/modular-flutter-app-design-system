@@ -4,8 +4,9 @@ import 'package:widgetbook/widgetbook.dart';
 
 import 'brand_file_loader.dart';
 
-/// The "Brand files" category: a token preview for each valid brand file and
-/// a problem report for each invalid one.
+/// The "Brand files" category: a token preview for each valid brand file,
+/// headed by its contrast report when it fails the gate, and a problem report
+/// for each invalid one.
 abstract final class BrandFileUseCases {
   /// Returns the category for [brands].
   static WidgetbookCategory category(WidgetbookBrands brands) =>
@@ -15,11 +16,16 @@ abstract final class BrandFileUseCases {
           for (final file in brands.files)
             if (file.brand case final brand?)
               WidgetbookComponent(
-                name: brand.name,
+                name: file.contrast?.passed == false
+                    ? '⚠ ${brand.name}'
+                    : brand.name,
                 useCases: [
                   WidgetbookUseCase(
                     name: 'Tokens',
-                    builder: (_) => BrandTokenPreview(brand: brand),
+                    builder: (_) => BrandTokenPreview(
+                      brand: brand,
+                      contrast: file.contrast,
+                    ),
                   ),
                 ],
               )
@@ -41,10 +47,14 @@ abstract final class BrandFileUseCases {
 /// in light and dark mode, its type scale, spacing, and radii.
 final class BrandTokenPreview extends StatelessWidget {
   /// Creates a token preview.
-  const BrandTokenPreview({super.key, required this.brand});
+  const BrandTokenPreview({super.key, required this.brand, this.contrast});
 
   /// The brand to preview.
   final DsBrand brand;
+
+  /// Optional contrast report of the brand; when it hasn't passed, the
+  /// preview starts with every failing pair.
+  final DsContrastReport? contrast;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +68,8 @@ final class BrandTokenPreview extends StatelessWidget {
             padding: context.dsSpacing.all(DsSpacingStep.lg),
             children: [
               _Heading('${brand.name} · ${brand.id}'),
+              if (contrast case final report? when !report.passed)
+                _ContrastReport(report),
               const _Heading('Color scales'),
               _ScaleRow('brand', [
                 ('50', colors.brand.shade50),
@@ -151,6 +163,21 @@ final class BrandProblemReport extends StatelessWidget {
       ),
     );
   }
+}
+
+final class _ContrastReport extends StatelessWidget {
+  const _ContrastReport(this.report);
+
+  final DsContrastReport report;
+
+  @override
+  Widget build(BuildContext context) => DsInlineMessage(
+    tone: DsMessageTone.warning,
+    title:
+        'Fails the contrast gate in ${report.violations.length} pair(s). It '
+        'stays selectable; fix its colors in the brand file.',
+    message: report.violations.join('\n'),
+  );
 }
 
 final class _Heading extends StatelessWidget {

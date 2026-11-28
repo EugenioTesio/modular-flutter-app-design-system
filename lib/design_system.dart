@@ -22,6 +22,8 @@
 /// * **Template**: [DsPageScaffold].
 /// * **Metadata**: [DsComponentInfo] on every component, listed by
 ///   [DsComponentCatalog].
+/// * **Guardrails**: [DsContrastGate] checks a brand's color pairs in both
+///   modes and returns a [DsContrastReport] of [DsContrastViolation]s.
 ///
 /// This is **not** a widget library to extend by subclassing: every class is
 /// `final`, so screens compose components instead.
@@ -76,6 +78,8 @@
 /// @docImport 'src/components/molecules/ds_inline_message.dart';
 /// @docImport 'src/components/molecules/ds_list_tile.dart';
 /// @docImport 'src/components/templates/ds_page_scaffold.dart';
+/// @docImport 'src/contrast/ds_contrast_gate.dart';
+/// @docImport 'src/contrast/ds_contrast_report.dart';
 /// @docImport 'src/exceptions/ds_brand_parse_exception.dart';
 /// @docImport 'src/layout/ds_gap.dart';
 /// @docImport 'src/theme/ds_brand_scope.dart';
@@ -109,6 +113,8 @@ export 'src/components/molecules/ds_empty_state.dart';
 export 'src/components/molecules/ds_inline_message.dart';
 export 'src/components/molecules/ds_list_tile.dart';
 export 'src/components/templates/ds_page_scaffold.dart';
+export 'src/contrast/ds_contrast_gate.dart';
+export 'src/contrast/ds_contrast_report.dart';
 export 'src/exceptions/ds_brand_parse_exception.dart';
 export 'src/layout/ds_gap.dart';
 export 'src/theme/ds_brand_scope.dart';

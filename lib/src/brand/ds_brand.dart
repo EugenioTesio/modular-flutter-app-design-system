@@ -1,3 +1,7 @@
+// This file defines the white label's primitive tokens, so its colors are
+// literal by nature. Every other file reads colors through a brand.
+// ignore_for_file: design_system_lints/ds_avoid_literal_color
+
 /// @docImport '../theme/ds_brand_scope.dart';
 /// @docImport '../theme/ds_theme.dart';
 /// @docImport '../theme/ds_theme_context.dart';

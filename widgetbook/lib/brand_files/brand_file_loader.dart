@@ -11,6 +11,7 @@ final class WidgetbookBrandFile {
     required this.fileName,
     this.brand,
     this.exceptions = const [],
+    this.contrast,
   });
 
   /// The file's name, such as `sample_forest.json`.
@@ -21,6 +22,10 @@ final class WidgetbookBrandFile {
 
   /// Every exception that rejected the file; empty when it is valid.
   final List<DsBrandParseException> exceptions;
+
+  /// Optional contrast report of the brand; null when the file is invalid.
+  /// A brand that fails the gate stays selectable.
+  final DsContrastReport? contrast;
 }
 
 /// The brands the Widgetbook offers, and every file it read.
@@ -35,6 +40,14 @@ final class WidgetbookBrands {
 
   /// Every file of the brands folder, valid or not, sorted by file name.
   final List<WidgetbookBrandFile> files;
+
+  /// Valid brands that fail the contrast gate. They stay selectable, marked
+  /// with a warning.
+  Set<DsBrand> get failingContrast => {
+    for (final file in files)
+      if (file.brand case final brand? when file.contrast?.passed == false)
+        brand,
+  };
 }
 
 /// Loader of the Widgetbook's `brands/` folder.
@@ -64,6 +77,8 @@ abstract final class BrandFileLoader {
   ///   invalid.
   /// * When two files share an id, the second one, by file name, is invalid.
   /// * An invalid file never stops the others.
+  /// * Each valid brand is checked with [DsContrastGate.check]. A brand that
+  ///   fails stays selectable and keeps its report.
   static WidgetbookBrands fromContents(
     Map<String, String> contents, {
     bool logParseTimes = false,
@@ -110,7 +125,11 @@ abstract final class BrandFileLoader {
   ) {
     if (brand.id == DsBrand.whiteLabel.id) {
       return brand == DsBrand.whiteLabel
-          ? WidgetbookBrandFile(fileName: fileName, brand: brand)
+          ? WidgetbookBrandFile(
+              fileName: fileName,
+              brand: brand,
+              contrast: DsContrastGate.check(brand),
+            )
           : _invalid(
               fileName,
               'This file no longer matches DsBrand.whiteLabel. Keep the two '
@@ -124,7 +143,11 @@ abstract final class BrandFileLoader {
       );
     }
     brands.add(brand);
-    return WidgetbookBrandFile(fileName: fileName, brand: brand);
+    return WidgetbookBrandFile(
+      fileName: fileName,
+      brand: brand,
+      contrast: DsContrastGate.check(brand),
+    );
   }
 
   static WidgetbookBrandFile _invalid(String fileName, String message) =>

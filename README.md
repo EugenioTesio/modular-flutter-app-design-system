@@ -14,9 +14,23 @@ The package depends at runtime on the Flutter SDK only.
 
 ```bash
 flutter pub get
-flutter analyze
+dart analyze
 flutter test
 ```
+
+### Token lint and contrast gate
+
+`lints/` holds `design_system_lints`, an analyzer plugin that reports literal colors and spacing, and literal icon sizes, border widths, opacities, and primitive brand colors inside components. The root `analysis_options.yaml` enables it, and the package must report 0 issues. Use `dart analyze`: `flutter analyze` doesn't run analyzer plugins, so it never shows these reports. The rules' own tests run with `cd lints && dart test`.
+
+Other projects opt in from their `analysis_options.yaml`:
+
+```yaml
+plugins:
+  design_system_lints:
+    path: ../design-system/lints
+```
+
+`DsContrastGate.check(brand)` lists every semantic color pair of a brand that falls below its required contrast in light or dark mode. The repository's tests run it on every file in `widgetbook/brands/`. In debug builds, placing a failing brand prints one warning that names the failing pairs.
 
 ### Golden images
 

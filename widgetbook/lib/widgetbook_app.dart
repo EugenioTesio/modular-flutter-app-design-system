@@ -37,7 +37,10 @@ final class DsWidgetbook extends StatelessWidget {
             WidgetbookTheme(name: 'Dark', data: DsTheme.dark()),
           ],
         ),
-        DsBrandAddon(brands.selectable),
+        DsBrandAddon(
+          brands.selectable,
+          failingContrast: brands.failingContrast,
+        ),
       ],
     );
   }
