@@ -1,10 +1,13 @@
 /// @docImport '../../tokens/ds_colors.dart';
 /// @docImport 'ds_list_tile.dart';
+/// @docImport '../../qa/ds_qa_identifiers.dart';
 library;
 
 import 'package:flutter/material.dart';
 
 import '../../catalog/ds_component_info.dart';
+import '../../guidelines/ds_guidelines_frame.dart';
+import '../../qa/ds_qa_semantics.dart';
 import '../../theme/ds_theme_context.dart';
 import '../../tokens/ds_spacing.dart';
 
@@ -45,12 +48,17 @@ final class DsCard extends StatelessWidget {
   ///   a short, clear text. Localize it.
   /// * [padding] - Optional space around [child]. Null means the nearest
   ///   brand's medium spacing step on every side.
+  /// * [qaIdentifier] - Optional identifier that UI automation finds the
+  ///   card by. It is exposed only in builds made with the QA switch
+  ///   ([DsQaIdentifiers.enabled]), and never changes what screen readers
+  ///   announce. Never put personal data in it.
   const DsCard({
     super.key,
     required this.child,
     this.onTap,
     this.semanticsLabel,
     this.padding,
+    this.qaIdentifier,
   });
 
   /// Metadata of this component: molecule, stable since 0.1.0.
@@ -74,6 +82,10 @@ final class DsCard extends StatelessWidget {
   /// step on every side.
   final EdgeInsetsGeometry? padding;
 
+  /// Optional identifier that UI automation finds the card by; exposed
+  /// only in builds made with the QA switch.
+  final String? qaIdentifier;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.dsColors;
@@ -90,17 +102,26 @@ final class DsCard extends StatelessWidget {
     );
     final tap = onTap;
     if (tap == null) {
-      return Material(
-        color: colors.surface,
-        shape: shape,
-        clipBehavior: Clip.antiAlias,
-        child: content,
+      return DsGuidelinesFrame(
+        level: DsCard.info.level,
+        // A static card forms no node of its own: its content keeps its
+        // nodes, and the identifier gets an unlabelled group node.
+        child: DsQaSemantics.group(
+          identifier: qaIdentifier,
+          child: Material(
+            color: colors.surface,
+            shape: shape,
+            clipBehavior: Clip.antiAlias,
+            child: content,
+          ),
+        ),
       );
     }
 
     final card = Semantics(
       container: true,
       button: true,
+      identifier: DsQaSemantics.identifierOf(qaIdentifier),
       label: semanticsLabel,
       onTap: tap,
       excludeSemantics: semanticsLabel != null,
@@ -124,6 +145,9 @@ final class DsCard extends StatelessWidget {
         ),
       ),
     );
-    return semanticsLabel == null ? MergeSemantics(child: card) : card;
+    return DsGuidelinesFrame(
+      level: DsCard.info.level,
+      child: semanticsLabel == null ? MergeSemantics(child: card) : card,
+    );
   }
 }

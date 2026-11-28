@@ -1,11 +1,14 @@
 /// @docImport '../../tokens/ds_colors.dart';
 /// @docImport 'ds_inline_message.dart';
+/// @docImport '../../qa/ds_qa_identifiers.dart';
 library;
 
 import 'package:flutter/material.dart';
 
 import '../../catalog/ds_component_info.dart';
+import '../../guidelines/ds_guidelines_frame.dart';
 import '../../layout/ds_gap.dart';
+import '../../qa/ds_qa_semantics.dart';
 import '../../theme/ds_theme_context.dart';
 import '../../tokens/ds_spacing.dart';
 import '../atoms/ds_button.dart';
@@ -49,6 +52,10 @@ final class DsEmptyState extends StatelessWidget {
   ///   with [onAction].
   /// * [onAction] - Optional callback of the action button. Set it together
   ///   with [actionLabel].
+  /// * [qaIdentifier] - Optional identifier that UI automation finds the
+  ///   empty state by. It is exposed only in builds made with the QA switch
+  ///   ([DsQaIdentifiers.enabled]), and never changes what screen readers
+  ///   announce. Never put personal data in it.
   const DsEmptyState({
     super.key,
     required this.title,
@@ -56,6 +63,7 @@ final class DsEmptyState extends StatelessWidget {
     this.icon,
     this.actionLabel,
     this.onAction,
+    this.qaIdentifier,
   }) : assert(
          (actionLabel == null) == (onAction == null),
          'Set actionLabel and onAction together.',
@@ -84,13 +92,17 @@ final class DsEmptyState extends StatelessWidget {
   /// Optional callback of the action button.
   final VoidCallback? onAction;
 
+  /// Optional identifier that UI automation finds the empty state by; exposed
+  /// only in builds made with the QA switch.
+  final String? qaIdentifier;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.dsColors;
     final typography = context.dsTypography;
     final message = this.message;
     final actionLabel = this.actionLabel;
-    return Center(
+    final emptyState = Center(
       child: Padding(
         padding: context.dsSpacing.all(DsSpacingStep.lg),
         child: Column(
@@ -129,6 +141,12 @@ final class DsEmptyState extends StatelessWidget {
           ],
         ),
       ),
+    );
+    return DsGuidelinesFrame(
+      level: DsEmptyState.info.level,
+      // An empty state forms no node of its own: its title, message, and
+      // action keep their nodes, and the identifier gets a group node.
+      child: DsQaSemantics.group(identifier: qaIdentifier, child: emptyState),
     );
   }
 }

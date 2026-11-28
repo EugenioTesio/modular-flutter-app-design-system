@@ -24,6 +24,11 @@
 ///   [DsComponentCatalog].
 /// * **Guardrails**: [DsContrastGate] checks a brand's color pairs in both
 ///   modes and returns a [DsContrastReport] of [DsContrastViolation]s.
+/// * **QA and review tools**: [DsQaIdentifiers], the build switch that
+///   exposes each component's `qaIdentifier` to UI automation, and
+///   [DsGuidelines], the developer overlay that outlines components by
+///   atomic level. Neither changes what end users see, and the overlay is
+///   always off in release builds.
 ///
 /// This is **not** a widget library to extend by subclassing: every class is
 /// `final`, so screens compose components instead.
@@ -81,7 +86,9 @@
 /// @docImport 'src/contrast/ds_contrast_gate.dart';
 /// @docImport 'src/contrast/ds_contrast_report.dart';
 /// @docImport 'src/exceptions/ds_brand_parse_exception.dart';
+/// @docImport 'src/guidelines/ds_guidelines.dart';
 /// @docImport 'src/layout/ds_gap.dart';
+/// @docImport 'src/qa/ds_qa_identifiers.dart';
 /// @docImport 'src/theme/ds_brand_scope.dart';
 /// @docImport 'src/theme/ds_theme.dart';
 /// @docImport 'src/theme/ds_theme_context.dart';
@@ -116,7 +123,9 @@ export 'src/components/templates/ds_page_scaffold.dart';
 export 'src/contrast/ds_contrast_gate.dart';
 export 'src/contrast/ds_contrast_report.dart';
 export 'src/exceptions/ds_brand_parse_exception.dart';
+export 'src/guidelines/ds_guidelines.dart';
 export 'src/layout/ds_gap.dart';
+export 'src/qa/ds_qa_identifiers.dart';
 export 'src/theme/ds_brand_scope.dart';
 export 'src/theme/ds_theme.dart';
 export 'src/theme/ds_theme_context.dart';

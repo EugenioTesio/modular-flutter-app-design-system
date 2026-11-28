@@ -3,6 +3,9 @@ library;
 
 import 'package:flutter/widgets.dart';
 
+import '../guidelines/ds_guidelines.dart';
+import '../guidelines/ds_guidelines_colors.dart';
+import '../guidelines/ds_guidelines_mode.dart';
 import '../theme/ds_theme_context.dart';
 import '../tokens/ds_spacing.dart';
 
@@ -14,8 +17,12 @@ import '../tokens/ds_spacing.dart';
 ///
 /// This is **not** a component: it draws nothing and has no metadata.
 ///
-/// Built-in: the size comes from [DsThemeContext.dsSpacing], so a nested
-/// brand with another spacing scale changes it.
+/// Built-in:
+/// * The size comes from [DsThemeContext.dsSpacing], so a nested brand with
+///   another spacing scale changes it.
+/// * While the developer guidelines overlay is on ([DsGuidelines]), the gap
+///   is tinted, so reviewers can see which spacing comes from tokens. The
+///   tint never changes its size, and release builds never show it.
 ///
 /// Usage from a micro app:
 /// ```dart
@@ -38,6 +45,32 @@ final class DsGap extends StatelessWidget {
   final DsSpacingStep step;
 
   @override
-  Widget build(BuildContext context) =>
-      SizedBox.square(dimension: context.dsSpacing[step]);
+  Widget build(BuildContext context) {
+    final gap = SizedBox.square(dimension: context.dsSpacing[step]);
+    // With nothing that can turn the overlay on, and always in release
+    // builds, the gap is built as it is without the overlay. Below a
+    // DsGuidelines, the painter widget stays, so toggling keeps the layout
+    // tree stable.
+    if (!DsGuidelinesMode.isSwitchable(context)) return gap;
+    return CustomPaint(
+      painter: DsGuidelines.isEnabledOf(context)
+          ? const _DsGapTintPainter()
+          : null,
+      child: gap,
+    );
+  }
+}
+
+/// Painter that tints a gap while the guidelines overlay is on.
+final class _DsGapTintPainter extends CustomPainter {
+  const _DsGapTintPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) => canvas.drawRect(
+    Offset.zero & size,
+    Paint()..color = DsGuidelinesColors.gapTint,
+  );
+
+  @override
+  bool shouldRepaint(_DsGapTintPainter oldDelegate) => false;
 }

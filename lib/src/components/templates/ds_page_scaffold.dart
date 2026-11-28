@@ -1,9 +1,12 @@
 /// @docImport '../../tokens/ds_colors.dart';
+/// @docImport '../../qa/ds_qa_identifiers.dart';
 library;
 
 import 'package:flutter/material.dart';
 
 import '../../catalog/ds_component_info.dart';
+import '../../guidelines/ds_guidelines_frame.dart';
+import '../../qa/ds_qa_semantics.dart';
 import '../../theme/ds_theme_context.dart';
 import '../../tokens/ds_spacing.dart';
 import '../atoms/ds_button.dart';
@@ -51,12 +54,17 @@ final class DsPageScaffold extends StatelessWidget {
   ///   stretched to the full width.
   /// * [onBack] - Optional callback of the back button. When null, the
   ///   platform back behavior applies.
+  /// * [qaIdentifier] - Optional identifier that UI automation finds the
+  ///   page by. It is exposed only in builds made with the QA switch
+  ///   ([DsQaIdentifiers.enabled]), and never changes what screen readers
+  ///   announce. Never put personal data in it.
   const DsPageScaffold({
     super.key,
     required this.title,
     required this.body,
     this.primaryAction,
     this.onBack,
+    this.qaIdentifier,
   });
 
   /// Metadata of this component: template, stable since 0.1.0.
@@ -79,13 +87,17 @@ final class DsPageScaffold extends StatelessWidget {
   /// Optional callback of the back button.
   final VoidCallback? onBack;
 
+  /// Optional identifier that UI automation finds the page by; exposed
+  /// only in builds made with the QA switch.
+  final String? qaIdentifier;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.dsColors;
     final spacing = context.dsSpacing;
     final onBack = this.onBack;
     final primaryAction = this.primaryAction;
-    return Scaffold(
+    final page = Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
         title: Text(title),
@@ -115,6 +127,12 @@ final class DsPageScaffold extends StatelessWidget {
                 child: SizedBox(width: double.infinity, child: primaryAction),
               ),
             ),
+    );
+    return DsGuidelinesFrame(
+      level: DsPageScaffold.info.level,
+      // A page forms no node of its own: its title bar, body, and action
+      // keep their nodes, and the identifier gets a group node.
+      child: DsQaSemantics.group(identifier: qaIdentifier, child: page),
     );
   }
 }

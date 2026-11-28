@@ -1,10 +1,13 @@
 /// @docImport '../../tokens/ds_colors.dart';
 /// @docImport 'ds_card.dart';
+/// @docImport '../../qa/ds_qa_identifiers.dart';
 library;
 
 import 'package:flutter/material.dart';
 
 import '../../catalog/ds_component_info.dart';
+import '../../guidelines/ds_guidelines_frame.dart';
+import '../../qa/ds_qa_semantics.dart';
 import '../../theme/ds_theme_context.dart';
 import '../../tokens/ds_spacing.dart';
 
@@ -44,6 +47,10 @@ final class DsListTile extends StatelessWidget {
   /// * [trailing] - Optional widget after the text, such as a chevron or an
   ///   amount.
   /// * [onTap] - Optional callback that makes the row tappable.
+  /// * [qaIdentifier] - Optional identifier that UI automation finds the
+  ///   row by. It is exposed only in builds made with the QA switch
+  ///   ([DsQaIdentifiers.enabled]), and never changes what screen readers
+  ///   announce. Never put personal data in it.
   const DsListTile({
     super.key,
     required this.title,
@@ -51,6 +58,7 @@ final class DsListTile extends StatelessWidget {
     this.leading,
     this.trailing,
     this.onTap,
+    this.qaIdentifier,
   });
 
   /// Metadata of this component: molecule, stable since 0.1.0.
@@ -76,13 +84,17 @@ final class DsListTile extends StatelessWidget {
   /// Optional callback that makes the row tappable.
   final VoidCallback? onTap;
 
+  /// Optional identifier that UI automation finds the row by; exposed
+  /// only in builds made with the QA switch.
+  final String? qaIdentifier;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.dsColors;
     final typography = context.dsTypography;
     final opacities = context.dsOpacities;
     final subtitle = this.subtitle;
-    return Material(
+    final tile = Material(
       type: MaterialType.transparency,
       child: ListTile(
         title: Text(
@@ -108,6 +120,10 @@ final class DsListTile extends StatelessWidget {
         hoverColor: colors.textPrimary.withValues(alpha: opacities.hovered),
         splashColor: colors.textPrimary.withValues(alpha: opacities.pressed),
       ),
+    );
+    return DsGuidelinesFrame(
+      level: DsListTile.info.level,
+      child: DsQaSemantics(identifier: qaIdentifier, child: tile),
     );
   }
 }

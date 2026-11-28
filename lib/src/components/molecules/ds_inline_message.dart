@@ -1,10 +1,13 @@
 /// @docImport '../../tokens/ds_colors.dart';
+/// @docImport '../../qa/ds_qa_identifiers.dart';
 library;
 
 import 'package:flutter/material.dart';
 
 import '../../catalog/ds_component_info.dart';
+import '../../guidelines/ds_guidelines_frame.dart';
 import '../../layout/ds_gap.dart';
+import '../../qa/ds_qa_semantics.dart';
 import '../../theme/ds_theme_context.dart';
 import '../../tokens/ds_spacing.dart';
 
@@ -67,6 +70,10 @@ final class DsInlineMessage extends StatelessWidget {
   ///   with [onAction].
   /// * [onAction] - Optional callback of the action button. Set it together
   ///   with [actionLabel].
+  /// * [qaIdentifier] - Optional identifier that UI automation finds the
+  ///   message by. It is exposed only in builds made with the QA switch
+  ///   ([DsQaIdentifiers.enabled]), and never changes what screen readers
+  ///   announce. Never put personal data in it.
   const DsInlineMessage({
     super.key,
     required this.message,
@@ -74,6 +81,7 @@ final class DsInlineMessage extends StatelessWidget {
     this.title,
     this.actionLabel,
     this.onAction,
+    this.qaIdentifier,
   }) : assert(
          (actionLabel == null) == (onAction == null),
          'Set actionLabel and onAction together.',
@@ -101,6 +109,10 @@ final class DsInlineMessage extends StatelessWidget {
 
   /// Optional callback of the action button.
   final VoidCallback? onAction;
+
+  /// Optional identifier that UI automation finds the message by; exposed
+  /// only in builds made with the QA switch.
+  final String? qaIdentifier;
 
   @override
   Widget build(BuildContext context) {
@@ -133,8 +145,9 @@ final class DsInlineMessage extends StatelessWidget {
     final title = this.title;
     final actionLabel = this.actionLabel;
 
-    return Semantics(
+    final messageBox = Semantics(
       container: true,
+      identifier: DsQaSemantics.identifierOf(qaIdentifier),
       liveRegion: tone == DsMessageTone.error || tone == DsMessageTone.warning,
       child: DecoratedBox(
         decoration: BoxDecoration(color: background, borderRadius: radius),
@@ -193,6 +206,10 @@ final class DsInlineMessage extends StatelessWidget {
           ),
         ),
       ),
+    );
+    return DsGuidelinesFrame(
+      level: DsInlineMessage.info.level,
+      child: messageBox,
     );
   }
 }

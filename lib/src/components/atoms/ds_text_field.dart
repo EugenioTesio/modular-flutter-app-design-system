@@ -1,9 +1,12 @@
 /// @docImport '../../tokens/ds_colors.dart';
+/// @docImport '../../qa/ds_qa_identifiers.dart';
 library;
 
 import 'package:flutter/material.dart';
 
 import '../../catalog/ds_component_info.dart';
+import '../../guidelines/ds_guidelines_frame.dart';
+import '../../qa/ds_qa_semantics.dart';
 import '../../theme/ds_theme_context.dart';
 
 /// Widget that lets the user enter text: the design system's text field.
@@ -57,6 +60,10 @@ final class DsTextField extends StatelessWidget {
   /// * [onChanged] - Optional callback with the text after each edit.
   /// * [onSubmitted] - Optional callback with the text when the user submits
   ///   from the keyboard.
+  /// * [qaIdentifier] - Optional identifier that UI automation finds the
+  ///   field by. It is exposed only in builds made with the QA switch
+  ///   ([DsQaIdentifiers.enabled]), and never changes what screen readers
+  ///   announce. Never put personal data in it.
   const DsTextField({
     super.key,
     required this.label,
@@ -70,6 +77,7 @@ final class DsTextField extends StatelessWidget {
     this.textInputAction,
     this.onChanged,
     this.onSubmitted,
+    this.qaIdentifier,
   });
 
   /// Metadata of this component: atom, stable since 0.1.0.
@@ -114,6 +122,10 @@ final class DsTextField extends StatelessWidget {
   /// keyboard.
   final ValueChanged<String>? onSubmitted;
 
+  /// Optional identifier that UI automation finds the field by; exposed
+  /// only in builds made with the QA switch.
+  final String? qaIdentifier;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.dsColors;
@@ -128,7 +140,7 @@ final class DsTextField extends StatelessWidget {
       borderSide: BorderSide(color: color, width: width),
     );
 
-    return TextField(
+    final field = TextField(
       controller: controller,
       obscureText: obscureText,
       enabled: enabled,
@@ -160,6 +172,10 @@ final class DsTextField extends StatelessWidget {
         focusedErrorBorder: outline(colors.errorForeground, thick),
         disabledBorder: outline(colors.actionDisabled, thin),
       ),
+    );
+    return DsGuidelinesFrame(
+      level: DsTextField.info.level,
+      child: DsQaSemantics(identifier: qaIdentifier, child: field),
     );
   }
 }

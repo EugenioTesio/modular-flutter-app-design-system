@@ -1,12 +1,15 @@
 /// @docImport '../templates/ds_page_scaffold.dart';
 /// @docImport '../../brand/ds_brand.dart';
 /// @docImport '../../tokens/ds_colors.dart';
+/// @docImport '../../qa/ds_qa_identifiers.dart';
 library;
 
 import 'package:flutter/material.dart';
 
 import '../../catalog/ds_component_info.dart';
+import '../../guidelines/ds_guidelines_frame.dart';
 import '../../layout/ds_gap.dart';
+import '../../qa/ds_qa_semantics.dart';
 import '../../theme/ds_theme_context.dart';
 import '../../tokens/ds_spacing.dart';
 
@@ -72,6 +75,10 @@ final class DsButton extends StatelessWidget {
   ///   false.
   /// * [expand] - Whether to fill the available width. Defaults to false.
   ///   [DsPageScaffold] makes its primary action full width on its own.
+  /// * [qaIdentifier] - Optional identifier that UI automation finds the
+  ///   button by. It is exposed only in builds made with the QA switch
+  ///   ([DsQaIdentifiers.enabled]), and never changes what screen readers
+  ///   announce. Never put personal data in it.
   const DsButton({
     super.key,
     required this.label,
@@ -80,6 +87,7 @@ final class DsButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.expand = false,
+    this.qaIdentifier,
   });
 
   /// Metadata of this component: atom, stable since 0.1.0.
@@ -107,6 +115,10 @@ final class DsButton extends StatelessWidget {
 
   /// Whether the button fills the available width.
   final bool expand;
+
+  /// Optional identifier that UI automation finds the button by; exposed
+  /// only in builds made with the QA switch.
+  final String? qaIdentifier;
 
   @override
   Widget build(BuildContext context) {
@@ -222,6 +234,16 @@ final class DsButton extends StatelessWidget {
       onPressed: isLoading ? null : onPressed,
       child: content,
     );
-    return expand ? SizedBox(width: double.infinity, child: button) : button;
+    return DsGuidelinesFrame(
+      level: DsButton.info.level,
+      // The Material button forms one node behind a semantics boundary, so
+      // the identifier is merged into it.
+      child: DsQaSemantics.merged(
+        identifier: qaIdentifier,
+        child: expand
+            ? SizedBox(width: double.infinity, child: button)
+            : button,
+      ),
+    );
   }
 }

@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:widgetbook/widgetbook.dart';
 
 import 'addons/ds_brand_addon.dart';
+import 'addons/ds_guidelines_addon.dart';
 import 'brand_files/brand_file_loader.dart';
 import 'catalog/catalog_directory.dart';
 import 'use_cases/component_use_cases.dart';
 
 /// The design system's Widgetbook: every component in every brand, mode, and
-/// viewport.
+/// viewport, with or without the developer guidelines overlay.
 final class DsWidgetbook extends StatelessWidget {
   /// Creates the Widgetbook for [brands].
   const DsWidgetbook({super.key, required this.brands});
@@ -24,7 +25,8 @@ final class DsWidgetbook extends StatelessWidget {
         brands: brands,
       ),
       // Outermost first: the viewport sizes the use case, the theme addon
-      // sets the mode, and the brand addon places the brand in that mode.
+      // sets the mode, the brand addon places the brand in that mode, and the
+      // guidelines addon outlines the components inside it.
       addons: [
         ViewportAddon([
           Viewports.none,
@@ -41,6 +43,7 @@ final class DsWidgetbook extends StatelessWidget {
           brands.selectable,
           failingContrast: brands.failingContrast,
         ),
+        DsGuidelinesAddon(),
       ],
     );
   }
