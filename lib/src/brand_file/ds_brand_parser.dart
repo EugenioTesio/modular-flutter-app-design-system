@@ -10,16 +10,16 @@ import '../brand/ds_brand_typography.dart';
 import '../brand/ds_color_scale.dart';
 import '../brand/ds_type_style.dart';
 import '../exceptions/ds_brand_parse_exception.dart';
-import '../exceptions/dtcg_resolution_exception.dart';
+import '../exceptions/ds_design_tokens_exception.dart';
 import '../tokens/ds_border_widths.dart';
 import '../tokens/ds_icon_sizes.dart';
 import '../tokens/ds_opacities.dart';
 import '../tokens/ds_radius.dart';
 import '../tokens/ds_spacing.dart';
 import 'ds_brand_parse_result.dart';
-import 'dtcg_reader.dart';
-import 'dtcg_references.dart';
-import 'dtcg_values.dart';
+import 'ds_design_tokens_reader.dart';
+import 'ds_design_tokens_resolver.dart';
+import 'ds_design_tokens_value_converter.dart';
 
 /// Parser that turns a brand file into a [DsBrand].
 ///
@@ -111,7 +111,7 @@ abstract final class DsBrandParser {
   /// Text that is not JSON, or whose root is not an object, gives one
   /// exception of type [DsBrandParseExceptionType.malformedFile].
   static DsBrandParseResult parseJson(String json) {
-    final (root, problem) = DtcgReader.decode(json);
+    final (root, problem) = DsDesignTokensReader.decode(json);
     if (root == null) {
       return DsBrandParseFailure([problem!]);
     }
@@ -126,17 +126,17 @@ abstract final class DsBrandParser {
   /// Returns a [DsBrandParseSuccess] with the brand, or a
   /// [DsBrandParseFailure] with one [DsBrandParseException] per problem.
   static DsBrandParseResult parseMap(Map<String, Object?> map) {
-    final document = DtcgReader.read(map);
+    final tokensFile = DsDesignTokensReader.read(map);
     final problems = <DsBrandParseException>[
-      for (final group in document.problemGroups)
+      for (final group in tokensFile.problemGroups)
         if (group.any((problem) => _onRequiredPath(problem.path))) ...group,
     ];
     final (id, name) = _readMetadata(map, problems);
 
-    final references = DtcgReferences(document);
+    final references = DsDesignTokensResolver(tokensFile);
     final values = <String, Object>{};
     for (final MapEntry(key: path, value: expectedType) in _required.entries) {
-      if (!document.tokens.containsKey(path)) {
+      if (!tokensFile.tokens.containsKey(path)) {
         problems.add(
           DsBrandParseException(
             path: path,
@@ -161,7 +161,7 @@ abstract final class DsBrandParser {
       }
       try {
         values[path] = _convert(path, expectedType, references.resolve(path));
-      } on DtcgResolutionException catch (error) {
+      } on DsDesignTokensException catch (error) {
         problems.addAll(error.exceptions);
       }
     }
@@ -175,13 +175,13 @@ abstract final class DsBrandParser {
   static Object _convert(String path, String type, Object? value) {
     switch (type) {
       case 'color':
-        return DtcgValues.color(value, path);
+        return DsDesignTokensValueConverter.color(value, path);
       case 'typography':
-        return DtcgValues.typeStyle(value, path);
+        return DsDesignTokensValueConverter.typeStyle(value, path);
       case 'number':
-        final number = DtcgValues.number(value, path);
+        final number = DsDesignTokensValueConverter.number(value, path);
         if (path.startsWith('opacity.') && (number < 0 || number > 1)) {
-          throw DtcgResolutionException.single(
+          throw DsDesignTokensException.single(
             path,
             DsBrandParseExceptionType.invalidValue,
             'An opacity must be from 0 to 1, not $number.',
@@ -189,7 +189,7 @@ abstract final class DsBrandParser {
         }
         return number;
       default:
-        return DtcgValues.dimension(value, path);
+        return DsDesignTokensValueConverter.dimension(value, path);
     }
   }
 
@@ -197,8 +197,9 @@ abstract final class DsBrandParser {
     Map<String, Object?> map,
     List<DsBrandParseException> problems,
   ) {
-    final extensions = DtcgReader.asObject(map[r'$extensions']);
-    final metadata = DtcgReader.asObject(extensions?[_metadataKey]) ?? {};
+    final extensions = DsDesignTokensReader.asObject(map[r'$extensions']);
+    final metadata =
+        DsDesignTokensReader.asObject(extensions?[_metadataKey]) ?? {};
     void add(String field, DsBrandParseExceptionType type, String message) =>
         problems.add(
           DsBrandParseException(

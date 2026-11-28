@@ -4,17 +4,17 @@ import 'dart:ui' show ColorSpace;
 import 'package:flutter/painting.dart';
 
 import '../brand/ds_type_style.dart';
-import '../exceptions/dtcg_resolution_exception.dart';
-import 'dtcg_reader.dart';
+import '../exceptions/ds_design_tokens_exception.dart';
+import 'ds_design_tokens_reader.dart';
 import '../exceptions/ds_brand_parse_exception.dart';
 
-/// Converters from resolved design-tokens values to the design system's
-/// values.
+/// Converters from resolved values of the W3C Design Tokens Format Module
+/// 2025.10 to the design system's values.
 ///
 /// This is internal to the design system and is not exported. Each converter
-/// throws a [DtcgResolutionException] naming [DsBrandParseExceptionType]
+/// throws a [DsDesignTokensException] naming [DsBrandParseExceptionType]
 /// invalidValue or unsupportedFormat for a value it can't use.
-abstract final class DtcgValues {
+abstract final class DsDesignTokensValueConverter {
   /// Font family names that mean the platform font.
   static const Set<String> genericFamilies = {'system-ui', 'sans-serif'};
 
@@ -49,7 +49,7 @@ abstract final class DtcgValues {
   /// sRGB, HSL, and HWB colors are rounded to 8 bits per channel, the
   /// precision of a hex color. Display-P3 colors keep their color space.
   static Color color(Object? value, String path) {
-    final object = DtcgReader.asObject(value);
+    final object = DsDesignTokensReader.asObject(value);
     if (object == null) throw _invalid(path, 'A color must be an object.');
     final space = object['colorSpace'];
     final components = object['components'];
@@ -127,7 +127,7 @@ abstract final class DtcgValues {
     String path, {
     bool allowNegative = false,
   }) {
-    final object = DtcgReader.asObject(value);
+    final object = DsDesignTokensReader.asObject(value);
     final number = object?['value'];
     final unit = object?['unit'];
     if (object == null || number is! num) {
@@ -210,7 +210,7 @@ abstract final class DtcgValues {
   /// Each missing or invalid part is reported on its own, at
   /// `<path>.<part>`.
   static DsTypeStyle typeStyle(Object? value, String path) {
-    final object = DtcgReader.asObject(value);
+    final object = DsDesignTokensReader.asObject(value);
     if (object == null) throw _invalid(path, 'A text style must be an object.');
     final problems = <DsBrandParseException>[];
     T? part<T>(String name, T Function(Object? value, String path) convert) {
@@ -227,7 +227,7 @@ abstract final class DtcgValues {
       }
       try {
         return convert(object[name], partPath);
-      } on DtcgResolutionException catch (error) {
+      } on DsDesignTokensException catch (error) {
         problems.addAll(error.exceptions);
         return null;
       }
@@ -259,7 +259,7 @@ abstract final class DtcgValues {
         ),
       );
     }
-    if (problems.isNotEmpty) throw DtcgResolutionException(problems);
+    if (problems.isNotEmpty) throw DsDesignTokensException(problems);
     return DsTypeStyle(
       fontFamily: family!.$1,
       fontFamilyFallback: family.$2,
@@ -329,15 +329,15 @@ abstract final class DtcgValues {
     return text.length > 40 ? '${text.substring(0, 37)}...' : text;
   }
 
-  static DtcgResolutionException _invalid(String path, String message) =>
-      DtcgResolutionException.single(
+  static DsDesignTokensException _invalid(String path, String message) =>
+      DsDesignTokensException.single(
         path,
         DsBrandParseExceptionType.invalidValue,
         message,
       );
 
-  static DtcgResolutionException _unsupported(String path, String message) =>
-      DtcgResolutionException.single(
+  static DsDesignTokensException _unsupported(String path, String message) =>
+      DsDesignTokensException.single(
         path,
         DsBrandParseExceptionType.unsupportedFormat,
         message,

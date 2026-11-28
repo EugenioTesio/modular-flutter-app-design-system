@@ -2,17 +2,18 @@ import 'dart:convert';
 
 import '../exceptions/ds_brand_parse_exception.dart';
 
-/// One token of a design-tokens file, before its references are resolved.
+/// One token of a file in the W3C Design Tokens Format Module 2025.10,
+/// before its references are resolved.
 ///
 /// This is internal to the design system and is not exported.
-final class DtcgToken {
+final class DsDesignToken {
   /// Creates a token.
   ///
   /// Parameters:
   /// * [path] - The token's dot path.
   /// * [type] - Optional `$type`, its own or inherited from a group.
   /// * [value] - The raw `$value`.
-  const DtcgToken({
+  const DsDesignToken({
     required this.path,
     required this.type,
     required this.value,
@@ -28,11 +29,12 @@ final class DtcgToken {
   final Object? value;
 }
 
-/// A design-tokens file read into tokens and groups.
+/// A file in the W3C Design Tokens Format Module 2025.10, read into tokens
+/// and groups.
 ///
 /// This is internal to the design system and is not exported.
-final class DtcgDocument {
-  /// Creates a document.
+final class DsDesignTokensFile {
+  /// Creates a read design-tokens file.
   ///
   /// Parameters:
   /// * [root] - The decoded file.
@@ -40,7 +42,7 @@ final class DtcgDocument {
   /// * [groups] - The dot path of every group; the root group is `''`.
   /// * [problemGroups] - Structural problems. Problems in one group belong
   ///   together, such as every member of one cycle.
-  const DtcgDocument({
+  const DsDesignTokensFile({
     required this.root,
     required this.tokens,
     required this.groups,
@@ -51,7 +53,7 @@ final class DtcgDocument {
   final Map<String, Object?> root;
 
   /// Every token, by dot path.
-  final Map<String, DtcgToken> tokens;
+  final Map<String, DsDesignToken> tokens;
 
   /// The dot path of every group; the root group is `''`.
   final Set<String> groups;
@@ -60,13 +62,13 @@ final class DtcgDocument {
   final List<List<DsBrandParseException>> problemGroups;
 }
 
-/// Reader for the structure of a design-tokens file (W3C Design Tokens
-/// Format Module 2025.10): tokens, groups, `$type` inheritance, `$root`, and
+/// Reader for the structure of a file in the W3C Design Tokens Format
+/// Module 2025.10: tokens, groups, `$type` inheritance, `$root`, and
 /// `$extends`.
 ///
 /// This is internal to the design system and is not exported. It records
 /// problems instead of stopping, so one run finds them all.
-abstract final class DtcgReader {
+abstract final class DsDesignTokensReader {
   /// Pattern of a curly-brace reference, such as `{color.brand.600}`.
   static final RegExp alias = RegExp(r'^\{([^{}]+)\}$');
 
@@ -133,10 +135,10 @@ abstract final class DtcgReader {
   ///
   /// Parameters:
   /// * [root] - The decoded file.
-  static DtcgDocument read(Map<String, Object?> root) {
-    final reader = _DtcgReaderRun(root);
+  static DsDesignTokensFile read(Map<String, Object?> root) {
+    final reader = _DsDesignTokensReaderRun(root);
     reader.walkGroup(root, const [], null);
-    return DtcgDocument(
+    return DsDesignTokensFile(
       root: root,
       tokens: reader.tokens,
       groups: reader.groups,
@@ -145,12 +147,12 @@ abstract final class DtcgReader {
   }
 }
 
-/// One run of [DtcgReader.read].
-final class _DtcgReaderRun {
-  _DtcgReaderRun(this.root);
+/// One run of [DsDesignTokensReader.read].
+final class _DsDesignTokensReaderRun {
+  _DsDesignTokensReaderRun(this.root);
 
   final Map<String, Object?> root;
-  final Map<String, DtcgToken> tokens = {};
+  final Map<String, DsDesignToken> tokens = {};
   final Set<String> groups = {''};
   final List<List<DsBrandParseException>> problemGroups = [];
 
@@ -179,7 +181,7 @@ final class _DtcgReaderRun {
       if (key == r'$root') {
         walkNode(value, [...segments, r'$root'], type);
       } else if (key.startsWith(r'$')) {
-        if (!DtcgReader._groupProperties.contains(key)) {
+        if (!DsDesignTokensReader._groupProperties.contains(key)) {
           problem(
             path,
             DsBrandParseExceptionType.invalidValue,
@@ -200,7 +202,7 @@ final class _DtcgReaderRun {
 
   void walkNode(Object? value, List<String> segments, String? inheritedType) {
     final path = segments.join('.');
-    final node = DtcgReader.asObject(value);
+    final node = DsDesignTokensReader.asObject(value);
     if (node == null) {
       problem(
         path,
@@ -229,7 +231,7 @@ final class _DtcgReaderRun {
         r'$type must be text.',
       );
     }
-    tokens[path] = DtcgToken(
+    tokens[path] = DsDesignToken(
       path: path,
       type: ownType is String ? ownType : inheritedType,
       value: node[r'$value'],
@@ -245,7 +247,9 @@ final class _DtcgReaderRun {
     final target = node[r'$extends'];
     if (target == null) return node;
     final local = {...node}..remove(r'$extends');
-    final match = target is String ? DtcgReader.alias.firstMatch(target) : null;
+    final match = target is String
+        ? DsDesignTokensReader.alias.firstMatch(target)
+        : null;
     if (match == null) {
       problem(
         path,
@@ -270,7 +274,7 @@ final class _DtcgReaderRun {
       ]);
       return local;
     }
-    final base = DtcgReader.asObject(lookup(targetPath));
+    final base = DsDesignTokensReader.asObject(lookup(targetPath));
     if (base == null) {
       problem(
         path,
@@ -297,7 +301,7 @@ final class _DtcgReaderRun {
   Object? lookup(String path) {
     Object? current = root;
     for (final segment in path.split('.')) {
-      final object = DtcgReader.asObject(current);
+      final object = DsDesignTokensReader.asObject(current);
       if (object == null) return null;
       current = object[segment];
     }
@@ -310,8 +314,8 @@ final class _DtcgReaderRun {
   ) {
     final merged = {...base};
     for (final MapEntry(:key, :value) in local.entries) {
-      final baseChild = DtcgReader.asObject(merged[key]);
-      final localChild = DtcgReader.asObject(value);
+      final baseChild = DsDesignTokensReader.asObject(merged[key]);
+      final localChild = DsDesignTokensReader.asObject(value);
       final bothGroups =
           baseChild != null &&
           localChild != null &&

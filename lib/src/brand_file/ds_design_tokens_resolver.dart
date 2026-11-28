@@ -1,21 +1,21 @@
-import '../exceptions/dtcg_resolution_exception.dart';
-import 'dtcg_reader.dart';
+import '../exceptions/ds_design_tokens_exception.dart';
+import 'ds_design_tokens_reader.dart';
 import '../exceptions/ds_brand_parse_exception.dart';
 
-/// Resolver of the references in a design-tokens file: curly-brace aliases
-/// to tokens and JSON Pointer `$ref` objects, followed in chains, with cycle
-/// detection.
+/// Resolver of the references in a file in the W3C Design Tokens Format
+/// Module 2025.10: curly-brace aliases to tokens and JSON Pointer `$ref`
+/// objects, followed in chains, with cycle detection.
 ///
 /// This is internal to the design system and is not exported.
-final class DtcgReferences {
+final class DsDesignTokensResolver {
   /// Creates a resolver.
   ///
   /// Parameters:
-  /// * [document] - The file read by [DtcgReader].
-  DtcgReferences(this.document);
+  /// * [tokensFile] - The file read by [DsDesignTokensReader].
+  DsDesignTokensResolver(this.tokensFile);
 
   /// The file whose references are resolved.
-  final DtcgDocument document;
+  final DsDesignTokensFile tokensFile;
 
   /// Returns the type of the token at [path]: its own or inherited `$type`,
   /// or, for an alias with neither, the type of the token it names.
@@ -28,11 +28,13 @@ final class DtcgReferences {
   String? typeOf(String path) => _typeOf(path, const []);
 
   String? _typeOf(String path, List<String> stack) {
-    final token = document.tokens[path];
+    final token = tokensFile.tokens[path];
     if (token == null || stack.contains(path)) return null;
     if (token.type != null) return token.type;
     final value = token.value;
-    final match = value is String ? DtcgReader.alias.firstMatch(value) : null;
+    final match = value is String
+        ? DsDesignTokensReader.alias.firstMatch(value)
+        : null;
     return match == null ? null : _typeOf(match.group(1)!, [...stack, path]);
   }
 
@@ -42,7 +44,7 @@ final class DtcgReferences {
   /// Parameters:
   /// * [path] - The token's dot path.
   ///
-  /// Throws a [DtcgResolutionException] with an unresolvedReference problem
+  /// Throws a [DsDesignTokensException] with an unresolvedReference problem
   /// at [path] when a reference names nothing or names a group, and with one
   /// circularReference problem per member when references form a cycle.
   Object? resolve(String path) => _resolveToken(path, path, const []);
@@ -50,12 +52,12 @@ final class DtcgReferences {
   Object? _resolveToken(String path, String origin, List<String> stack) {
     final cycleStart = stack.indexOf(path);
     if (cycleStart >= 0) throw _cycle(stack.sublist(cycleStart));
-    final token = document.tokens[path];
+    final token = tokensFile.tokens[path];
     if (token == null) {
-      final what = document.groups.contains(path)
+      final what = tokensFile.groups.contains(path)
           ? 'a group, not a token'
           : 'nothing in the file';
-      throw DtcgResolutionException.single(
+      throw DsDesignTokensException.single(
         origin,
         DsBrandParseExceptionType.unresolvedReference,
         'The reference "{$path}" names $what.',
@@ -66,7 +68,7 @@ final class DtcgReferences {
 
   Object? _resolveValue(Object? value, String origin, List<String> stack) {
     if (value is String) {
-      final match = DtcgReader.alias.firstMatch(value);
+      final match = DsDesignTokensReader.alias.firstMatch(value);
       return match == null
           ? value
           : _resolveToken(match.group(1)!, origin, stack);
@@ -74,7 +76,7 @@ final class DtcgReferences {
     if (value is List) {
       return [for (final item in value) _resolveValue(item, origin, stack)];
     }
-    final object = DtcgReader.asObject(value);
+    final object = DsDesignTokensReader.asObject(value);
     if (object == null) return value;
     if (object.length == 1 && object.containsKey(r'$ref')) {
       return _resolvePointer(object[r'$ref'], origin, stack);
@@ -87,7 +89,7 @@ final class DtcgReferences {
 
   Object? _resolvePointer(Object? pointer, String origin, List<String> stack) {
     if (pointer is! String || !pointer.startsWith('#')) {
-      throw DtcgResolutionException.single(
+      throw DsDesignTokensException.single(
         origin,
         DsBrandParseExceptionType.unresolvedReference,
         r'A $ref must be a JSON Pointer within the file, such as "#/a/b".',
@@ -98,7 +100,7 @@ final class DtcgReferences {
     if (cycleStart >= 0) throw _cycle(stack.sublist(cycleStart));
     final (found, target) = _lookupPointer(pointer);
     if (!found) {
-      throw DtcgResolutionException.single(
+      throw DsDesignTokensException.single(
         origin,
         DsBrandParseExceptionType.unresolvedReference,
         r'The $ref "'
@@ -110,9 +112,9 @@ final class DtcgReferences {
 
   (bool, Object?) _lookupPointer(String pointer) {
     final body = pointer.substring(1);
-    if (body.isEmpty) return (true, document.root);
+    if (body.isEmpty) return (true, tokensFile.root);
     if (!body.startsWith('/')) return (false, null);
-    Object? current = document.root;
+    Object? current = tokensFile.root;
     for (final raw in body.substring(1).split('/')) {
       final segment = raw.replaceAll('~1', '/').replaceAll('~0', '~');
       if (current is List) {
@@ -122,7 +124,7 @@ final class DtcgReferences {
         }
         current = current[index];
       } else {
-        final object = DtcgReader.asObject(current);
+        final object = DsDesignTokensReader.asObject(current);
         if (object == null || !object.containsKey(segment)) {
           return (false, null);
         }
@@ -144,8 +146,8 @@ final class DtcgReferences {
     return (valueAt >= 0 ? segments.sublist(0, valueAt) : segments).join('.');
   }
 
-  static DtcgResolutionException _cycle(List<String> members) =>
-      DtcgResolutionException([
+  static DsDesignTokensException _cycle(List<String> members) =>
+      DsDesignTokensException([
         for (final member in members)
           DsBrandParseException(
             path: member,
