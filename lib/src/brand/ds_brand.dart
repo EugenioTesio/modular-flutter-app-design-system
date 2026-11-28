@@ -82,6 +82,13 @@ final class DsBrand {
     required this.iconSizes,
   });
 
+  /// The 0.1.0 name of [whiteLabel], kept so existing code still compiles.
+  ///
+  /// It is the same brand as [whiteLabel]. Replace every use with
+  /// [whiteLabel] before 0.3.0, which removes it.
+  @Deprecated('Use DsBrand.whiteLabel. Removed in 0.3.0.')
+  static const DsBrand standard = whiteLabel;
+
   /// The white-label brand, built into the design system.
   ///
   /// It is used wherever no other brand is placed, and it passes the

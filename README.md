@@ -54,13 +54,29 @@ Check them on Linux with Docker:
 docker run --rm -v "$PWD":/w -w /w ghcr.io/cirruslabs/flutter:3.47.9 flutter test --tags golden
 ```
 
-The `example/` app is a gallery of every component:
+The `widgetbook/` app shows every component in every brand file, mode, and viewport, with a toggle for the developer guidelines overlay:
 
 ```bash
-cd example && flutter run
+cd widgetbook && flutter run -d macos
 ```
 
 To try a local change in Foundations before it is released, add a git-ignored `pubspec_overrides.yaml` to the Foundations checkout that points `design_system` to this repository's folder.
+
+## Versions and lifecycle
+
+**Versions.** Releases follow semantic versioning and are tagged `vX.Y.Z`. Before 1.0, a minor release (`0.2.0` → `0.3.0`) may break the API, and a patch release (`0.2.0` → `0.2.1`) never does. From 1.0, only a major release breaks. Every release has a [CHANGELOG.md](CHANGELOG.md) entry with Added, Changed, Deprecated, Removed, and Fixed, and a **Migration** section with before and after code whenever something breaks. Foundations states which release it delivers, and a Foundations release that adopts a breaking one is breaking too.
+
+**Component statuses.** Every component declares its status in `info.status` and on a `**Status**:` line of its documentation, and the Widgetbook shows it next to the name.
+
+| Status | What it means for you |
+|--------|-----------------------|
+| `experimental` | New. It may change or be removed in any minor release, and the change is listed in the changelog. New components start here. |
+| `stable` | Settled. It changes only as semantic versioning allows. |
+| `deprecated` | On its way out. Its documentation names the replacement and the release that removes it. |
+
+**Deprecations.** A deprecated element carries `@Deprecated('Use <replacement>. Removed in <version>.')`, so your code shows a warning where it uses it. It stays for at least one minor release before it is removed, and the changelog's Migration section shows how to move off it. For example, `DsBrand.standard` is deprecated in favor of `DsBrand.whiteLabel` and is removed in 0.3.0.
+
+**Brand-schema versions.** Every brand file declares a `schemaVersion`. `DsBrandParser.supportedSchemaVersions` lists the versions a release reads, and its changelog entry repeats them. Adding, renaming, or removing a required token bumps the schema version, and the changelog lists the token paths that changed. A file with an unsupported version is rejected with a message that names the supported ones. `0.2.0` reads version 1.
 
 ## Conventions
 
